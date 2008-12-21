@@ -33,7 +33,7 @@ Machine learning techniques will be important in this stage.  Basic thresholding
 
 This system will take as input the data produced in the tracking stage, and will asynchronously produce "gesture events" that trigger some sort of action.  The particular action taken will depend on the client application that is listening for gestures, and will not be included as part of the recognition system.  
 
-== Client Interaction ==
+=== Client Interaction ===
 
 Once the recognition system decides that a gesture has occurred, we need a way to communicate that to whatever programs are taking input from the eye tracker.  The goal is that the eye tracker would function essentially as ubiquitous hardware like the mouse or keyboard, but depending on complexity we may have to have a more focused communication system.
 
@@ -45,3 +45,33 @@ Linux doesn't have events, so we'll probably need to use pipes and signals.
  * Fake a keypress.  This is an intriguing idea, as it would allow us to use the eye-tracker with any existing application.  Basically we'd map each gesture to a different key (e.g. arrow keys for pupil movement, space for an eyebrow raise and enter for an extended blink), and then just programmatically trigger a keypress when the gesture is detected.
  * Network sockets.  Set up a client/server type interface on a port and send the signals that way.  This is an intriguing idea, as it would open the possibility of using the eye-tracker across a network, which could have a lot of cool applications.
 
+This should be a library that exposes a simple API into the eye-tracker.  The extent and complexity of the library will be dependent on the particular method (or methods) selected.  A sample usage might be:
+{{{
+int handle = eyeTrackerConnect();
+while (1)
+{
+  int gesture = waitForGesture(handle);
+  switch(gesture)
+  {
+  case EYE_MOVE_LEFT:
+    /* DO SOME COOL STUFF */
+  case EYE_MOVE_RIGHT:
+    /* DO SOME OTHER COOL STUFF */
+  }
+}
+eyeTrackerRelease(handle);
+}}}
+
+
+=== Testing Application ===
+
+We need some quantitative testing results to demonstrate usability.  We could use a tapping task, but that isn't particularly amenable to gestures, and would probably just show that eye tracking sucks for continuous control (which we know already).  This should be a single application (with GUI) that offers a few kinds of tests:
+ * Baseline: Tell user to act normally without making any deliberate eye motions.  Track the gestures that are produced (false positives), and produce statistics on which gestures were detected and how frequently.
+ * Gestures on Cue: Tell user to perform a specific gesture, and then wait for first gesture detected (or set amount of time).  Repeat many times, and compute statistics such as accuracy, false negative rate, commonly confused gestures, etc.  This could also be extended to accommodate sequences of gestures.
+
+ 
+=== Client Application ===
+
+Our main goal is really to produce a nice interface that client applications can use, so we shouldn't spend too much time creating our own client apps.  However, a simple demo for proof-of-concept purposes is a good idea.  Perhaps a typing application, which would demonstrate a use for accessibility.  Each letter would be mapped to a sequence of gestures.
+
+We should also find some existing application and try to make it respond to our eye gestures.  Perhaps a simple game, like tetris or snake.
