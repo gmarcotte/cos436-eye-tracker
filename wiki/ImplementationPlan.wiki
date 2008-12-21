@@ -1,5 +1,12 @@
 #summary Implementation Plan
 
+= Implementation =
+
+There are six tasks detailed in the next section that need to be completed for this project.  The descriptions are perhaps slightly optimistic, but we should try to get them done as fully as possible.  The breakdown into separate systems should be almost completely modularized, so that each piece can be developed and tested independently.  The only real overlap will be in designing the communication mechanism between pieces.
+
+Since OpenCV is only currently available in C++, the tracking and recognition systems will need to be written in C++.  The testing and client applications could be written in any language, since they will hopefully be abstracted away from the particular implementation of the tracking/recognition systems.
+
+
 = Tasks =
 
 === Physical Construction ===
