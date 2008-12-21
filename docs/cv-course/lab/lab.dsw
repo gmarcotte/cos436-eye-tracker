@@ -1,0 +1,80 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "CV"=..\cv\make\CV.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "HighGUI"=..\otherlibs\highgui\HighGUI.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name CV
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "skeleton"=.\skeleton\skeleton.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name CV
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name HighGUI
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "squares"=.\squares\squares.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name CV
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name HighGUI
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
