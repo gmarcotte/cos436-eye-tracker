@@ -31,4 +31,17 @@ Given a stream of data about the eye (i.e. pupil location, eyebrow position, etc
 
 Machine learning techniques will be important in this stage.  Basic thresholding may be able to get us started, but will likely have a high false positive rate.  Perhaps some sort of clustering or SVM over an n-th order Markov model would be more appropriate (i.e. treating the last n data points as a vector in n-space).  Since there is so much random movement around the eyes, we will want to focus on keeping the false positive rate down as much as possible.
 
-This system will take as input the data produced in the tracking stage, and will asynchronously produce "gesture events" that trigger some sort of action.
+This system will take as input the data produced in the tracking stage, and will asynchronously produce "gesture events" that trigger some sort of action.  The particular action taken will depend on the client application that is listening for gestures, and will not be included as part of the recognition system.  
+
+== Client Interaction ==
+
+Once the recognition system decides that a gesture has occurred, we need a way to communicate that to whatever programs are taking input from the eye tracker.  The goal is that the eye tracker would function essentially as ubiquitous hardware like the mouse or keyboard, but depending on complexity we may have to have a more focused communication system.
+
+Options for signaling a gesture are:
+
+ * Callback functions, for testing/training/monitoring systems that would be linked to our code.
+ * Custom OS-level signals/events.  This would require a different solution depending on the operating system, and probably would be the most complex.  Windows has an event-driven framework, so we would probably need to define custom events and trigger them as needed.  
+Linux doesn't have events, so we'll probably need to use pipes and signals.
+ * Fake a keypress.  This is an intriguing idea, as it would allow us to use the eye-tracker with any existing application.  Basically we'd map each gesture to a different key (e.g. arrow keys for pupil movement, space for an eyebrow raise and enter for an extended blink), and then just programmatically trigger a keypress when the gesture is detected.
+ * Network sockets.  Set up a client/server type interface on a port and send the signals that way.  This is an intriguing idea, as it would open the possibility of using the eye-tracker across a network, which could have a lot of cool applications.
+
