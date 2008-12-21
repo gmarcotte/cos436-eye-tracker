@@ -2,16 +2,33 @@
 
 = Tasks =
 
-== Physical Construction ==
+=== Physical Construction ===
 
 We need to order cameras and have them by the start of reading period.  We need a baseball cap or other hat with a stiff brim that can be dismantled.  The cameras need to be attached stably and securely to the hat.  We may need to wire a couple LEDs for lighting, depending on the video quality.
 
 
-== Tracking Systems ==
+=== Tracking Systems ===
 
 Given an image of the eye area, there are several parts that we want to track.  First and foremost is the pupil location.  For reference, we should also know the eye boundary.  As a secondary goal, we would like to track eyebrow position and shape.
 
 For this system, OpenCV vision algorithms will be the most useful.  Given the sharp contrasts in and around the eye, edge detection routines will probably be our best bet.  We probably can also do some basic color analysis since just about everybody has black pupils and white surrounding area, regardless of iris, skin or hair color.  This will not be the case for the eyebrows.  Finding the iris is essentially equivalent to finding the pupil, so techniques currently used in iris scanning (which is a well-developed field) should be applicable.
 
-This system will take as input the images from two cameras, one for each eye, and will produce some sort of 
- 
+This system will take as input the images from two cameras, one for each eye, and will produce for each frame a struct/class containing the tracking information.  This could be as simple as coordinates for key points, but may also contain more complex data, such as the curvature of the eyebrow or the shape of the eye.
+
+This step of the system will be time-independent.  It produces data for only a single frame of the video.  The algorithms may use past frames to improve tracking performance, but we do not perform any data-stream/signal analysis in this step.
+
+=== Recognition Systems ===
+
+Given a stream of data about the eye (i.e. pupil location, eyebrow position, etc.) that is produced in the tracking stage, we want to extract "gestures".  Ideally the code would be flexible enough that we can easily add new gestures, but let's start by focusing on the following seven items:
+
+ * Moving pupil from center to left
+ * Moving pupil from center to right
+ * Moving pupil from center to down
+ * Moving pupil from center to up
+ * Winking (left & right eye)
+ * Extended blink / closed eyes
+ * Eyebrow raise
+
+Machine learning techniques will be important in this stage.  Basic thresholding may be able to get us started, but will likely have a high false positive rate.  Perhaps some sort of clustering or SVM over an n-th order Markov model would be more appropriate (i.e. treating the last n data points as a vector in n-space).  Since there is so much random movement around the eyes, we will want to focus on keeping the false positive rate down as much as possible.
+
+This system will take as input the data produced in the tracking stage, and will asynchronously produce "gesture events" that trigger some sort of action.
