@@ -1,0 +1,17 @@
+#summary Implementation Plan
+
+= Tasks =
+
+== Physical Construction ==
+
+We need to order cameras and have them by the start of reading period.  We need a baseball cap or other hat with a stiff brim that can be dismantled.  The cameras need to be attached stably and securely to the hat.  We may need to wire a couple LEDs for lighting, depending on the video quality.
+
+
+== Tracking Systems ==
+
+Given an image of the eye area, there are several parts that we want to track.  First and foremost is the pupil location.  For reference, we should also know the eye boundary.  As a secondary goal, we would like to track eyebrow position and shape.
+
+For this system, OpenCV vision algorithms will be the most useful.  Given the sharp contrasts in and around the eye, edge detection routines will probably be our best bet.  We probably can also do some basic color analysis since just about everybody has black pupils and white surrounding area, regardless of iris, skin or hair color.  This will not be the case for the eyebrows.  Finding the iris is essentially equivalent to finding the pupil, so techniques currently used in iris scanning (which is a well-developed field) should be applicable.
+
+This system will take as input the images from two cameras, one for each eye, and will produce some sort of 
+ 
