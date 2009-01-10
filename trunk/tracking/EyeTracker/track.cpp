@@ -1,44 +1,109 @@
 #include <stdio.h>
-#include <math.h>
 
 #include <cv.h>
 #include <highgui.h>
 
 #include "CaptureHandler.h"
-#include "GUI.h"
 #include "config.h"
+#include "GUI.h"
 
-void invertImage(IplImage* img)
+class Pupil {
+public:
+	int x;
+	int y;
+	int radius;
+};
+
+double dist(CvPoint a, CvPoint b)
 {
-	// get the image data
-	int i, j, k;
-  int height    = img->height;
-  int width     = img->width;
-  int step      = img->widthStep;
-  int channels  = img->nChannels;
-  uchar *data      = (uchar *)img->imageData;
-  for(i=0;i<height;i++) for(j=0;j<width;j++) for(k=0;k<channels;k++)
-    data[i*step+j*channels+k]=255-data[i*step+j*channels+k];
+	return sqrt( (double)((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)) );
 }
 
-double eccentricity(CvBox2D ellipse)
+void updatePupil(IplImage* inputImg, Pupil* update_pup)
 {
-	double a = ellipse.size.height / 2;
-	double b = ellipse.size.width / 2;
-	if (a <= b)
-		return sqrt(1 - (a / b)*(a / b));
-	else
-		return sqrt(1 - (b / a)*(b / a));
-}
+	CvMemStorage* storage = cvCreateMemStorage(1000);
+	CvSeq* firstContour;
+	int headerSize = sizeof(CvContour);
 
-double dist(CvPoint2D32f a, CvPoint2D32f b)
-{
-	return sqrt( (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) );
-}
+	int count;
+	CvPoint* pointArray;
+	CvPoint2D32f* pointArray32f;
+	int i;
 
-double norm(CvPoint2D32f a)
-{
-	return dist(cvPoint2D32f(0.0, 0.0), a);
+	CvBox2D* myBox = (CvBox2D*)malloc(sizeof(CvBox2D));
+	CvPoint myCenter;
+	int height, width;
+	
+	//	**	Contours are found
+	cvFindContours(inputImg, storage, &firstContour, headerSize, 
+				   CV_RETR_EXTERNAL, CV_CHAIN_APPROX_TC89_L1 );
+
+	//cvNamedWindow("draw", 0);
+	//	**	Search for valid contours
+	int max = 0;
+	while (firstContour != NULL)
+	{
+		//cvDrawContours(inputImg, firstContour,RGB(0,0,255),CV_FILLED,0);
+		//cvShowImage("draw", inputImg);
+		//cvWaitKey(0);
+		
+		//	not a point?
+		if ( CV_IS_SEQ_CURVE(firstContour) )
+		{
+			count = firstContour->total;
+
+			pointArray = (CvPoint*) malloc(count*sizeof(CvPoint));
+			pointArray32f = (CvPoint2D32f*) malloc((count+1)*sizeof(CvPoint2D32f));
+
+			//	**	Get contour points
+			cvCvtSeqToArray(firstContour, pointArray, CV_WHOLE_SEQ);
+			//	**	Convert to 32f points
+			for (i=0; i<count; i++)
+			{
+				pointArray32f[i].x = (float)pointArray[i].x;
+				pointArray32f[i].y = (float)pointArray[i].y;
+			}
+			pointArray32f[i].x = pointArray[0].x;
+			pointArray32f[i].y = pointArray[0].y;
+
+			if (count>=6)
+			{
+	
+				//	**	Fit Ellipse to the points
+				cvFitEllipse(pointArray32f, count, myBox);
+
+				myCenter.x = (int)myBox->center.x;
+				myCenter.y = (int)myBox->center.y;
+				height	= (int)myBox->size.height;
+				width	= (int)myBox->size.width;
+				
+				//cvCircle(inputImg,myCenter, (int)length/2 ,RGB(0,0,255));
+				//float myAngle= myBox->angle;
+				//cvEllipse(inputImg, myCenter, cvSize ((int)width/2,(int)height/2), -myBox->angle, 0,360,RGB(0,255,0),1);
+				
+				//	**	Check whether it is a valid connected component or not?
+				if ( (myCenter.x > 0) && (myCenter.y > 0) && 
+					 ((height+width) > max) && ((height-width) <= width) && 
+					 ((width-height) <= height) && (width <= (int)inputImg->width/2) && (height <= (int)inputImg->height/2))
+				{
+					max = height + width;
+					update_pup->x = myCenter.x;
+					update_pup->y = myCenter.y;
+					height>width ? update_pup->radius=(int)height/2 : update_pup->radius=(int)width/2;
+				}
+			}
+			
+			free(pointArray);
+			free(pointArray32f);
+		}
+		//cvShowImage("draw", inputImg); cvWaitKey(0);
+		firstContour = firstContour->h_next;	
+	}
+
+	free(myBox);
+	cvReleaseMemStorage(&storage);
+	
+	//cvDestroyWindow("draw");
 }
 
 
@@ -87,350 +152,76 @@ int main(int argc, char* argv[])
 			index++;
 		}
 	}
-	// Algorithm Configuration Parameters
-	char* eyebrow_threshold_trackbar = "EB Thresh";
-	char* eye_threshold_trackbar = "E Thresh";
-	char* pupil_threshold_trackbar = "P Thresh";
-	char* intensity_threshold_trackbar = "Threshold";
-	const double intensity_threshold_init = 120;
-	const double intensity_threshold_low = 0;
-	const double intensity_threshold_high = 255;
-	const int intensity_threshold_resolution = 255;
-
-	char* min_eyebrow_length_trackbar = "Min EB Len";
-	char* max_eyebrow_length_trackbar = "Max EB Len";
-	char* min_eye_length_trackbar = "Min E Len";
-	char* max_eye_length_trackbar = "Max E Leng";
-	char* min_pupil_length_trackbar = "Min P Len";
-	char* contour_filter_trackbar = "Contour Filter";
-	const double contour_filter_init = 50;
-	const double contour_filter_min = 0;
-	const double contour_filter_max = 1000;
-	const int contour_filter_resolution = 2000;
-
-	
-	char* min_eyebrow_eccentricity_trackbar = "Min EB Ecc";
-	char* min_eye_eccentricity_trackbar = "Min E Ecc";
-	char* max_eye_eccentricity_trackbar = "Max E Ecc";
-	char* max_pupil_eccentricity_trackbar = "Max P Ecc";
-	char* eccentricity_filter_trackbar = "Eccentricity Filter";
-	const double eccentricity_init = 50;
-	const double eccentricity_min = 0;
-	const double eccentricity_max = 1;
-	const int eccentricity_resolution = 100;
-
-	// Set up the configuration GUI
-	char* config_name = "EyeTracker Configuration";
-	cvNamedWindow(config_name, 0);
-
-	ConfigTrackbar* eyebrow_threshold = new ConfigTrackbar(
-		eyebrow_threshold_trackbar, config_name,
-		intensity_threshold_init, intensity_threshold_low, 
-		intensity_threshold_high, intensity_threshold_resolution);
-
-	ConfigTrackbar* min_eyebrow_length = new ConfigTrackbar(
-		min_eyebrow_length_trackbar, config_name,
-		contour_filter_init, contour_filter_min,
-		contour_filter_max, contour_filter_resolution);
-
-	ConfigTrackbar* max_eyebrow_length = new ConfigTrackbar(
-		max_eyebrow_length_trackbar, config_name,
-		contour_filter_init, contour_filter_min,
-		contour_filter_max, contour_filter_resolution);
-
-	ConfigTrackbar* min_eyebrow_eccentricity = new ConfigTrackbar(
-		min_eyebrow_eccentricity_trackbar, config_name,
-		eccentricity_init, eccentricity_min, eccentricity_max,
-		eccentricity_resolution);
-
-	ConfigTrackbar* eye_threshold = new ConfigTrackbar(
-		eye_threshold_trackbar, config_name,
-		intensity_threshold_init, intensity_threshold_low, 
-		intensity_threshold_high, intensity_threshold_resolution);
-
-	ConfigTrackbar* min_eye_length = new ConfigTrackbar(
-		min_eye_length_trackbar, config_name,
-		contour_filter_init, contour_filter_min,
-		contour_filter_max, contour_filter_resolution);
-
-	ConfigTrackbar* max_eye_length = new ConfigTrackbar(
-		max_eye_length_trackbar, config_name,
-		contour_filter_init, contour_filter_min,
-		contour_filter_max, contour_filter_resolution);
-
-	ConfigTrackbar* min_eye_eccentricity = new ConfigTrackbar(
-		min_eye_eccentricity_trackbar, config_name,
-		eccentricity_init, eccentricity_min, eccentricity_max,
-		eccentricity_resolution);
-
-	ConfigTrackbar* max_eye_eccentricity = new ConfigTrackbar(
-		max_eye_eccentricity_trackbar, config_name,
-		eccentricity_init, eccentricity_min, eccentricity_max,
-		eccentricity_resolution);
-
-	ConfigTrackbar* pupil_threshold = new ConfigTrackbar(
-		pupil_threshold_trackbar, config_name,
-		intensity_threshold_init, intensity_threshold_low, 
-		intensity_threshold_high, intensity_threshold_resolution);
-
-	ConfigTrackbar* min_pupil_length = new ConfigTrackbar(
-		min_pupil_length_trackbar, config_name,
-		contour_filter_init, contour_filter_min,
-		contour_filter_max, contour_filter_resolution);
-
-	ConfigTrackbar* max_pupil_eccentricity = new ConfigTrackbar(
-		max_pupil_eccentricity_trackbar, config_name,
-		eccentricity_init, eccentricity_min, eccentricity_max,
-		eccentricity_resolution);
-
 
 	// Set up the eye trackers, image memory and display windows for each input
 	IplImage* original_eyes[NUM_INPUTS];
 	IplImage* modified_eyes[NUM_INPUTS];
-	IplImage* contour_eyes[NUM_INPUTS];
-	IplImage* gray_eyes[NUM_INPUTS];
 
 	char original_names[NUM_INPUTS][MAX_STRING];
 	char modified_names[NUM_INPUTS][MAX_STRING];
-	char inverted_names[NUM_INPUTS][MAX_STRING];
-	char thresholded_names[NUM_INPUTS][MAX_STRING];
-	char contour_names[NUM_INPUTS][MAX_STRING];
-	char pupil_names[NUM_INPUTS][MAX_STRING];
-	char eyebrow_names[NUM_INPUTS][MAX_STRING];
-	char eye_names[NUM_INPUTS][MAX_STRING];
+	char ellipse_names[NUM_INPUTS][MAX_STRING];
+	char threshold_names[NUM_INPUTS][MAX_STRING];
 	for (i=0; i<NUM_INPUTS; i++)
 	{
 		sprintf_s(original_names[i], MAX_STRING, "Input %d: Direct Feed", i);
 		sprintf_s(modified_names[i], MAX_STRING, "Input %d: Modified Eye Image", i);
-		sprintf_s(inverted_names[i], MAX_STRING, "Input %d: Inverted Eye Image", i);
-		sprintf_s(thresholded_names[i], MAX_STRING, "Input %d: Thresholded Eye Image", i);
-		sprintf_s(contour_names[i], MAX_STRING, "Input %d: Eye Image Contours", i);
-		sprintf_s(eyebrow_names[i], MAX_STRING, "Input %d: Thresholded Eyebrow", i);
-		sprintf_s(eye_names[i], MAX_STRING, "Input %d: Thresholded Eye", i);
-		sprintf_s(pupil_names[i], MAX_STRING, "Input %d: Thresholded Pupil", i);
+		sprintf_s(ellipse_names[i], MAX_STRING, "Input %d: Ellipse Image", i);
+		sprintf_s(threshold_names[i], MAX_STRING, "Input %d: Threshold Image", i);
 		captures[i]->openInWindow(original_names[i]);
 		cvNamedWindow(modified_names[i]);
-		cvNamedWindow(thresholded_names[i]);
-		cvNamedWindow(inverted_names[i]);
-		cvNamedWindow(contour_names[i]);
-		cvNamedWindow(eyebrow_names[i]);
-		cvNamedWindow(eye_names[i]);
-		cvNamedWindow(pupil_names[i]);
+		cvNamedWindow(ellipse_names[i]);
+		cvNamedWindow(threshold_names[i]);
 
 		original_eyes[i] = cvCreateImage(cvSize(captures[i]->getWidth(), captures[i]->getHeight()),
 																		 IPL_DEPTH_8U, 3);
 		modified_eyes[i] = cvCreateImage(cvSize(captures[i]->getWidth(), captures[i]->getHeight()),
 																		 IPL_DEPTH_8U, 1);
-		contour_eyes[i] = cvCreateImage(cvSize(captures[i]->getWidth(), captures[i]->getHeight()),
-																		 IPL_DEPTH_8U, 1);
-		gray_eyes[i] = cvCreateImage(cvSize(captures[i]->getWidth(), captures[i]->getHeight()),
-																 IPL_DEPTH_8U, 1);
 	}
 
-	CvMemStorage* storage = cvCreateMemStorage(0);
+	// Set up the config GUI
+	char* config_name = "EyeTracker Configuration";
+	cvNamedWindow(config_name, 0);
+
+	ConfigTrackbar* threshold = new ConfigTrackbar(
+		"Threshold", config_name, 80, 0, 255, 255);
+
+	ConfigTrackbar* canny_high = new ConfigTrackbar(
+		"Canny Hi", config_name, 250, 0, 500, 500);
+
+	ConfigTrackbar* canny_low = new ConfigTrackbar(
+		"Canny Low", config_name, 200, 0, 500, 500);
+
+
+	Pupil pupils[NUM_INPUTS];
+	for (i = 0; i < NUM_INPUTS; i++)
+	{
+		pupils[i].x = 0;
+		pupils[i].y = 0;
+		pupils[i].radius = 0;
+	}
 
 	char c;
-	//CvBox2D best_pupil;
-	//CvBox2D best_eyebrow;
-	//CvBox2D best_eye;
 	while ( (c = cvWaitKey(33)) != 'q')
 	{
 		for (i = 0; i < NUM_INPUTS; i++)
 		{
 			captures[i]->advance();
-			cvZero(original_eyes[i]);
 			captures[i]->getCurrentFrame(original_eyes[i]);
-			captures[i]->getCurrentFrame(gray_eyes[i]);
-			cvSmooth(gray_eyes[i], gray_eyes[i], CV_GAUSSIAN, 5, 5);
-			CvSeq* contours = 0;
-			CvSeq* curr_contour;
-			/*
-			cvFindContours(modified_eyes[i], storage, &contours);
-			cvZero(contour_eyes[i]);
-			CvSeq* curr_contour = contours;
-			while (curr_contour != NULL)
-			{
-				//printf("Contour Length: %6.2f\n", cvContourPerimeter(curr_contour));
-				cvDrawContours(contour_eyes[i], curr_contour, cvScalarAll(255), cvScalarAll(255), 1);
-				CvBox2D box = cvMinAreaRect2(curr_contour);
-				cvDrawEllipse(contour_eyes[i], 
-											cvPoint(box.center.x, box.center.y), 
-											cvSize(box.size.height / 2, box.size.width / 2), 
-											box.angle, 0.0, 360.0, cvScalarAll(255));
-				curr_contour = curr_contour->h_next;
-			}
-			*/
-
-			int run_once;
-
-			/***********************************************************************************/
-			// Find the best guess at the eye
-			cvZero(modified_eyes[i]);
-			cvThreshold(gray_eyes[i], modified_eyes[i], eye_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
-			cvShowImage(eye_names[i], modified_eyes[i]);
-			cvClearMemStorage(storage);
-			contours = 0;
-			cvFindContours(modified_eyes[i], storage, &contours);
-			curr_contour = contours;
-
-			run_once = 0;
-			CvBox2D best_eye;
-			best_eye.center.x = -1;
-			curr_contour = contours;
-			while (curr_contour != NULL)
-			{
-				CvBox2D box = cvMinAreaRect2(curr_contour);
-				if (cvContourPerimeter(curr_contour) >= min_eye_length->getValue() &&
-						cvContourPerimeter(curr_contour) <= max_eye_length->getValue() &&
-						eccentricity(box) >= min_eye_eccentricity->getValue() &&
-						eccentricity(box) <= max_eye_eccentricity->getValue())
-				{
-					if (run_once == 0)
-					{
-						best_eye = box;
-						run_once = 1;
-					}
-					else if ( (box.size.height * box.size.width) > (best_eye.size.height * best_eye.size.width))
-						best_eye = box;
-				}
-				curr_contour = curr_contour->h_next;
-			}
-
-			//best_eyebrow = curr_best_eyebrow;
-			
-			
-			if ( (best_eye.center.x >= 0 && best_eye.center.x <= captures[i]->getWidth()) &&
-					 (best_eye.center.y >= 0 && best_eye.center.y <= captures[i]->getHeight()) )
-			{
-				printf("Best Eye: \n\tPos: %6.2f, %6.2f, \n\tSize: %6.2f, %6.2f, \n\tAngle: %6.2f, Ecc: %6.2f\n", 
-							  best_eye.center.x, best_eye.center.y, 
-							  best_eye.size.height, best_eye.size.height,
-							  best_eye.angle, eccentricity(best_eye));
-				cvDrawEllipse(original_eyes[i],
-											cvPoint(best_eye.center.x, best_eye.center.y), 
-											cvSize(best_eye.size.height / 2, best_eye.size.width / 2), 
-											best_eye.angle, 0.0, 360.0, CV_RGB(0, 0, 255), 2);
-			}
-			else
-			{
-				printf("No eye detected.\n");
-			}
-			/**********************************************************************************/
-
-			/***********************************************************************************/
-			// Find the best guess at the pupil
-			if (best_eye.center.x != -1)
-			{
-				cvZero(modified_eyes[i]);
-				cvThreshold(gray_eyes[i], modified_eyes[i], pupil_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
-				cvShowImage(pupil_names[i], modified_eyes[i]);
-				cvClearMemStorage(storage);
-				contours = 0;
-				cvFindContours(modified_eyes[i], storage, &contours);
-				curr_contour = contours;
-
-				run_once = 0;
-				CvBox2D best_pupil;
-				best_pupil.center.x = -1;
-				curr_contour = contours;
-				while (curr_contour != NULL)
-				{
-					CvBox2D box = cvMinAreaRect2(curr_contour);
-					if  (eccentricity(box) <= max_pupil_eccentricity->getValue() &&
-							 cvContourPerimeter(curr_contour) > min_pupil_length->getValue())
-					{
-						if (run_once == 0)
-						{
-							best_pupil = box;
-							run_once = 1;
-						}
-						// Find the most circular contour that is within the eye estimate
-						else if (eccentricity(box) < eccentricity(best_pupil) &&
-										 dist(box.center, best_eye.center) < max(best_eye.size.height, best_eye.size.width) )
-							best_pupil = box;
-					}
-					curr_contour = curr_contour->h_next;
-				}
-
-				//best_eyebrow = curr_best_eyebrow;
-				if ( (best_pupil.center.x >= 0 && best_pupil.center.x <= captures[i]->getWidth()) &&
-						 (best_pupil.center.y >= 0 && best_pupil.center.y <= captures[i]->getHeight()) )
-				{
-					printf("Best Pupil: \n\tPos: %6.2f, %6.2f, \n\tSize: %6.2f, %6.2f, \n\tAngle: %6.2f, Ecc: %6.2f\n", 
-								 best_pupil.center.x, best_pupil.center.y, 
-								 best_pupil.size.height, best_pupil.size.height,
-								 best_pupil.angle, eccentricity(best_pupil));
-					cvDrawEllipse(original_eyes[i], 
-												cvPoint(best_pupil.center.x, best_pupil.center.y), 
-												cvSize(best_pupil.size.height / 2, best_pupil.size.width / 2), 
-												best_pupil.angle, 0.0, 360.0, CV_RGB(0, 255, 0), 2);
-				}
-				else
-				{
-					printf("No Pupil Detected.\n");
-				}
-			}
-			else
-			{
-				printf("No Pupil Detected, because no eye could be found.\n");
-			}
-			/***********************************************************************************/
-
-			/***********************************************************************************/
-			// Find the best guess at the eyebrow
-			cvZero(modified_eyes[i]);
-			cvThreshold(gray_eyes[i], modified_eyes[i], eyebrow_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
-			cvShowImage(eyebrow_names[i], modified_eyes[i]);
-			cvClearMemStorage(storage);
-			contours = 0;
-			cvFindContours(modified_eyes[i], storage, &contours);
-			curr_contour = contours;
-
-			run_once = 0;
-			CvBox2D best_eyebrow;
-			best_eyebrow.center.x = -1;
-			curr_contour = contours;
-			while (curr_contour != NULL)
-			{
-				CvBox2D box = cvMinAreaRect2(curr_contour);
-				if (cvContourPerimeter(curr_contour) >= min_eyebrow_length->getValue() &&
-						cvContourPerimeter(curr_contour) <= max_eyebrow_length->getValue() &&
-						eccentricity(box) >= min_eyebrow_eccentricity->getValue() )
-				{
-					if (run_once == 0)
-					{
-						best_eyebrow = box;
-						run_once = 1;
-					}
-					else if (best_eyebrow.center.y > box.center.y)
-						best_eyebrow = box;
-				}
-				curr_contour = curr_contour->h_next;
-			}
-
-			//best_eyebrow = curr_best_eyebrow;
-			
-			
-			if ( (best_eyebrow.center.x >= 0 && best_eyebrow.center.x <= captures[i]->getWidth()) &&
-					 (best_eyebrow.center.y >= 0 && best_eyebrow.center.y <= captures[i]->getHeight()) )
-			{
-				printf("Best Eyebrow: \n\tPos: %6.2f, %6.2f, \n\tSize: %6.2f, %6.2f, \n\tAngle: %6.2f, Ecc: %6.2f\n", 
-							  best_eyebrow.center.x, best_eyebrow.center.y, 
-							  best_eyebrow.size.height, best_eyebrow.size.height,
-							  best_eyebrow.angle, eccentricity(best_eyebrow));
-				cvDrawEllipse(original_eyes[i], 
-											cvPoint(best_eyebrow.center.x, best_eyebrow.center.y), 
-											cvSize(best_eyebrow.size.height / 2, best_eyebrow.size.width / 2), 
-											best_eyebrow.angle, 0.0, 360.0, CV_RGB(255, 0, 0), 2);
-			}
-			else
-			{
-				printf("No eyebrow detected.\n");
-			}
-			/**********************************************************************************/
-
+			cvCvtPixToPlane(original_eyes[i], NULL, NULL, modified_eyes[i], NULL );
+			cvThreshold(modified_eyes[i], modified_eyes[i], threshold->getValue(), 255, CV_THRESH_BINARY_INV);
+			cvCanny(modified_eyes[i], modified_eyes[i], canny_low->getValue(), canny_high->getValue(), 3);
+			cvShowImage(threshold_names[i], modified_eyes[i]);
+			updatePupil(modified_eyes[i], &pupils[i]);
+			printf("Found pupil %d: (%d, %d) - %d\n", i, pupils[i].x, pupils[i].y, pupils[i].radius);
+			if (pupils[i].radius > 0)
+				cvDrawCircle(original_eyes[i], cvPoint(pupils[i].x, pupils[i].y), pupils[i].radius, CV_RGB(255, 0, 0));
 			cvShowImage(modified_names[i], original_eyes[i]);
-			cvShowImage(contour_names[i], contour_eyes[i]);
+
+			/* DO SOMETHING WITH pupils[i] HERE */
+
+
+
+			/************************************/
 		}
 	}
 
@@ -440,32 +231,16 @@ int main(int argc, char* argv[])
 	{
 		cvReleaseImage(&original_eyes[i]);
 		cvReleaseImage(&modified_eyes[i]);
-		cvReleaseImage(&contour_eyes[i]);
-		cvReleaseImage(&gray_eyes[i]);
 		cvDestroyWindow(modified_names[i]);
-		cvDestroyWindow(thresholded_names[i]);
-		cvDestroyWindow(inverted_names[i]);
-		cvDestroyWindow(contour_names[i]);
-		cvDestroyWindow(eyebrow_names[i]);
-		cvDestroyWindow(eye_names[i]);
-		cvDestroyWindow(pupil_names[i]);
+		cvDestroyWindow(ellipse_names[i]);
+		cvDestroyWindow(threshold_names[i]);
 		delete captures[i];
 		captures[i] = NULL;
 	}
 
-	// Free the configuration GUI
-	delete eye_threshold;
-	delete eyebrow_threshold;
-	delete pupil_threshold;
-	delete min_eyebrow_length;
-	delete max_eyebrow_length;
-	delete min_eyebrow_eccentricity;
-	delete min_eye_length;
-	delete max_eye_length;
-	delete min_eye_eccentricity;
-	delete max_eye_eccentricity;
-	delete max_pupil_eccentricity;
-	delete min_pupil_length;
+	delete canny_high;
+	delete canny_low;
+	delete threshold;
 	cvDestroyWindow(config_name);
 
 	return 1;
