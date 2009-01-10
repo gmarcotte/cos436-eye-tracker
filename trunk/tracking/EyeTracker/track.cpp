@@ -106,6 +106,38 @@ void updatePupil(IplImage* inputImg, Pupil* update_pup)
 	//cvDestroyWindow("draw");
 }
 
+void updateEyebrow(IplImage* img, CvBox2D* eyebrow, Pupil* pupil)
+{
+	CvSeq* contours;
+	IplImage* scratch = cvCloneImage(img);
+	CvMemStorage* storage = cvCreateMemStorage(0);
+	cvFindContours(scratch, storage, &contours);
+	CvSeq* curr_contour = contours;
+
+	int run_once = 0;
+	CvBox2D best_eyebrow;
+	best_eyebrow.center.x = -1;
+	while (curr_contour != NULL)
+	{
+		CvBox2D box = cvMinAreaRect2(curr_contour);
+		if ( abs(box.center.x - pupil->x) < 100 &&
+				 (pupil->y - box.center.y) > 10 )
+		{
+			if (run_once == 0)
+			{
+				best_eyebrow = box;
+				run_once = 1;
+			}
+			else if (best_eyebrow.center.y > box.center.y)
+				best_eyebrow = box;
+		}
+		curr_contour = curr_contour->h_next;
+	}
+	*(eyebrow) = best_eyebrow;
+	cvReleaseMemStorage(&storage);
+	cvReleaseImage(&scratch);
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -156,6 +188,7 @@ int main(int argc, char* argv[])
 	// Set up the eye trackers, image memory and display windows for each input
 	IplImage* original_eyes[NUM_INPUTS];
 	IplImage* modified_eyes[NUM_INPUTS];
+	IplImage* threshold_eyes[NUM_INPUTS];
 
 	char original_names[NUM_INPUTS][MAX_STRING];
 	char modified_names[NUM_INPUTS][MAX_STRING];
@@ -176,14 +209,16 @@ int main(int argc, char* argv[])
 																		 IPL_DEPTH_8U, 3);
 		modified_eyes[i] = cvCreateImage(cvSize(captures[i]->getWidth(), captures[i]->getHeight()),
 																		 IPL_DEPTH_8U, 1);
+		threshold_eyes[i] = cvCreateImage(cvSize(captures[i]->getWidth(), captures[i]->getHeight()),
+						    										  IPL_DEPTH_8U, 1);
 	}
 
 	// Set up the config GUI
 	char* config_name = "EyeTracker Configuration";
 	cvNamedWindow(config_name, 0);
 
-	ConfigTrackbar* threshold = new ConfigTrackbar(
-		"Threshold", config_name, 80, 0, 255, 255);
+	ConfigTrackbar* pupil_threshold = new ConfigTrackbar(
+		"P Thresh", config_name, 80, 0, 255, 255);
 
 	ConfigTrackbar* canny_high = new ConfigTrackbar(
 		"Canny Hi", config_name, 250, 0, 500, 500);
@@ -191,13 +226,27 @@ int main(int argc, char* argv[])
 	ConfigTrackbar* canny_low = new ConfigTrackbar(
 		"Canny Low", config_name, 200, 0, 500, 500);
 
+	ConfigTrackbar* eyebrow_threshold = new ConfigTrackbar(
+		"EB Thresh", config_name, 100, 0, 255, 255);
+
+	ConfigTrackbar* eye_threshold = new ConfigTrackbar(
+		"E Thresh", config_name, 120, 0, 255, 255);
+
 
 	Pupil pupils[NUM_INPUTS];
+	CvBox2D eyebrows[NUM_INPUTS];
+	CvRect eyes[NUM_INPUTS];
 	for (i = 0; i < NUM_INPUTS; i++)
 	{
 		pupils[i].x = 0;
 		pupils[i].y = 0;
 		pupils[i].radius = 0;
+
+		eyebrows[i].angle = 0;
+		eyebrows[i].center = cvPoint2D32f(0, 0);
+		eyebrows[i].size = cvSize2D32f(0, 0);
+
+		eyes[i] = cvRect(0, 0, 0, 0);
 	}
 
 	char c;
@@ -207,14 +256,41 @@ int main(int argc, char* argv[])
 		{
 			captures[i]->advance();
 			captures[i]->getCurrentFrame(original_eyes[i]);
+			cvZero(modified_eyes[i]);
 			cvCvtPixToPlane(original_eyes[i], NULL, NULL, modified_eyes[i], NULL );
-			cvThreshold(modified_eyes[i], modified_eyes[i], threshold->getValue(), 255, CV_THRESH_BINARY_INV);
-			cvCanny(modified_eyes[i], modified_eyes[i], canny_low->getValue(), canny_high->getValue(), 3);
-			cvShowImage(threshold_names[i], modified_eyes[i]);
-			updatePupil(modified_eyes[i], &pupils[i]);
+			cvSmooth(modified_eyes[i], modified_eyes[i], CV_GAUSSIAN, 5, 5);
+
+			// Pupil detection
+			cvThreshold(modified_eyes[i], threshold_eyes[i], pupil_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
+			cvCanny(threshold_eyes[i], threshold_eyes[i], canny_low->getValue(), canny_high->getValue(), 3);
+			cvShowImage(threshold_names[i], threshold_eyes[i]);
+			updatePupil(threshold_eyes[i], &pupils[i]);
 			printf("Found pupil %d: (%d, %d) - %d\n", i, pupils[i].x, pupils[i].y, pupils[i].radius);
 			if (pupils[i].radius > 0)
-				cvDrawCircle(original_eyes[i], cvPoint(pupils[i].x, pupils[i].y), pupils[i].radius, CV_RGB(255, 0, 0));
+				cvDrawCircle(original_eyes[i], cvPoint(pupils[i].x, pupils[i].y), pupils[i].radius, CV_RGB(255, 0, 0), 2);
+
+
+			// Eyebrow Detection
+			cvThreshold(modified_eyes[i], threshold_eyes[i], eyebrow_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
+			cvShowImage(ellipse_names[i], threshold_eyes[i]);
+			updateEyebrow(threshold_eyes[i], &eyebrows[i], &pupils[i]);		
+			if ( (eyebrows[i].center.x >= 0 && eyebrows[i].center.x <= captures[i]->getWidth()) &&
+					 (eyebrows[i].center.y >= 0 && eyebrows[i].center.y <= captures[i]->getHeight()) )
+			{
+				printf("Found Eyebrow: \n\tPos: %6.2f, %6.2f, \n\tSize: %6.2f, %6.2f, \n\tAngle: %6.2f\n", 
+							  eyebrows[i].center.x, eyebrows[i].center.y, 
+							  eyebrows[i].size.width, eyebrows[i].size.height,
+							  eyebrows[i].angle);
+				cvDrawEllipse(original_eyes[i], 
+											cvPoint(eyebrows[i].center.x, eyebrows[i].center.y), 
+											cvSize(eyebrows[i].size.height / 2, eyebrows[i].size.width / 2), 
+											eyebrows[i].angle, 0.0, 360.0, CV_RGB(0, 255, 0), 2);
+			}
+			else
+			{
+				printf("No eyebrow detected.\n");
+			}
+
 			cvShowImage(modified_names[i], original_eyes[i]);
 
 			/* DO SOMETHING WITH pupils[i] HERE */
@@ -225,12 +301,12 @@ int main(int argc, char* argv[])
 		}
 	}
 
-
 	// Free memory allocated for input captures
 	for (i=0; i<NUM_INPUTS; i++)
 	{
 		cvReleaseImage(&original_eyes[i]);
 		cvReleaseImage(&modified_eyes[i]);
+		cvReleaseImage(&threshold_eyes[i]);
 		cvDestroyWindow(modified_names[i]);
 		cvDestroyWindow(ellipse_names[i]);
 		cvDestroyWindow(threshold_names[i]);
@@ -240,7 +316,9 @@ int main(int argc, char* argv[])
 
 	delete canny_high;
 	delete canny_low;
-	delete threshold;
+	delete pupil_threshold;
+	delete eyebrow_threshold;
+	delete eye_threshold;
 	cvDestroyWindow(config_name);
 
 	return 1;
