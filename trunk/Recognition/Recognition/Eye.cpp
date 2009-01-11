@@ -13,6 +13,20 @@ Eye::Eye()
 	  eyePositionY=0;
 	  browPositionY=0;
 }
+Eye::Eye(bool noPupDet, int pupPosX, int pupPosY,
+		int pupRad, int eyeSzX, int eyeSzY, int eyePosX,
+		int eyePosY, int browPosY)
+{
+	  noPupilDetected = noPupDet;
+	  pupilPositionX=pupPosX;
+	  pupilPositionY=pupPosY;
+	  pupilRadius=pupRad;
+	  eyeSizeX=eyeSzX;
+	  eyeSizeY=eyeSzY;
+	  eyePositionX=eyePosX;
+	  eyePositionY=eyePosY;
+	  browPositionY=browPosY;
+}
 int Eye::getRelativeEyePositionX()
 {
 	return pupilPositionX - eyePositionX;

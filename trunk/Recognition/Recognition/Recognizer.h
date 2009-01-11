@@ -16,6 +16,7 @@ using namespace System::Windows::Forms;
 
 class Recognizer
 {
+	public:
 	enum eyeActions {CENTER, LEFT, RIGHT, UP, DOWN,
                  LEFT_CLOSED, RIGHT_CLOSED, BOTH_CLOSED};
     enum browActions {RAISED, NORMAL}; 
@@ -26,29 +27,43 @@ class Recognizer
 					BLINK_LIMIT = 12
 					};
 
-public:
+
 	//moving average filter of the current eye position
 	//array[0] is the current, averaged position
 	//array[1] to array[MAF_LENGTH] stores the previous (MAF_LENGTH-1) values
-	int* currentGazePositionX;
-	int* currentGazePositionY;
-	int* currentEyePositionX;
-	int* currentEyePositionY;
-	int* currentEyeSizeX;
-	int* currentEyeSizeY;
-	int* currentPupilRadius;
+	
+	//left ones
+	int* currentGazePositionLX;
+	int* currentGazePositionLY;
+	int* currentEyePositionLX;
+	int* currentEyePositionLY;
+	int* currentEyeSizeLX;
+	int* currentEyeSizeLY;
+	int* currentPupilRadiusL;
+	//right ones
+	int* currentGazePositionRX;
+	int* currentGazePositionRY;
+	int* currentEyePositionRX;
+	int* currentEyePositionRY;
+	int* currentEyeSizeRX;
+	int* currentEyeSizeRY;
+	int* currentPupilRadiusR;
 
 	int currentLeftEyeAction;
 	int currentLeftEyeActionCount;
 	int currentRightEyeAction;
 	int currentRightEyeActionCount;
 	int currentBrowAction;
-	int blinkFrameCount;
+	int blinkFrameCountLeft;
+	int blinkFrameCountRight;
 	//when a new eye is given, this updates the stored values in the MAF
 	//and computes the new average position
-	void updateCurrentEyePosition(Eye eye);
+	void updateCurrentLeftEyePosition(Eye leftEye);
+	void updateCurrentRightEyePosition(Eye rightEye);
 	int updateState(Eye newEyeLeft, Eye newEyeRight);
-	int calculateCurrentEyePosition();
+	int calculateCurrentLeftEyePosition();
+	int calculateCurrentRightEyePosition();
+	void output(int currentEyeAction);//send the key for a specific action
 	//the constructor
 	Recognizer();
 	~Recognizer();
