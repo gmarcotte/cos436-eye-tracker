@@ -20,6 +20,9 @@ public:
 	//is the eye looking up, down, left, right or center?
 	int returnEyePosition();
 	Eye();
+	Eye(bool noPupDet, int pupPosX, int pupPosY,
+		int pupRad, int eyeSzX, int eyeSzY, int eyePosX,
+		int eyePosY, int browPosY);
 };
 
 #endif

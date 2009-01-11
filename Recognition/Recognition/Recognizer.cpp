@@ -4,121 +4,243 @@
 
 Recognizer::Recognizer()
 {
-	blinkFrameCount = 0;
+	blinkFrameCountLeft = 0;
+	blinkFrameCountRight = 0;
 
 	currentLeftEyeAction = Recognizer::CENTER;
 	currentRightEyeAction = Recognizer::CENTER;
 	currentBrowAction = Recognizer::RAISED;
 
-	currentGazePositionX = (int*) malloc(sizeof(int) * MAF_LENGTH);
-	currentGazePositionY = (int*) malloc(sizeof(int) * MAF_LENGTH);
-	currentEyePositionX = (int*) malloc(sizeof(int) * MAF_LENGTH);
-	currentEyePositionY = (int*) malloc(sizeof(int) * MAF_LENGTH);
-	currentEyeSizeX = (int*) malloc(sizeof(int) * MAF_LENGTH);
-	currentEyeSizeY = (int*) malloc(sizeof(int) * MAF_LENGTH);
-	currentPupilRadius = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	//Left Eye
+	currentGazePositionLX = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentGazePositionLY = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentEyePositionLX = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentEyePositionLY = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentEyeSizeLX = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentEyeSizeLY = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentPupilRadiusL = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	//Right Eye
+	currentGazePositionRX = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentGazePositionRY = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentEyePositionRX = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentEyePositionRY = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentEyeSizeRX = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentEyeSizeRY = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	currentPupilRadiusR = (int*) malloc(sizeof(int) * MAF_LENGTH);
 	//check memory
-	if(currentEyeSizeY == NULL){printf("out of memory\n");return;}
+	if(currentPupilRadiusR == NULL){printf("out of memory\n");return;}
 
 	for(int i = 0; i < MAF_LENGTH-1; i++)
 	{
-		currentGazePositionX[i] = 0;
-		currentGazePositionY[i] = 0;
-		currentEyePositionX[i] = 0;
-		currentEyePositionY[i] = 0;
-		currentEyeSizeX[i] = 0;
-		currentEyeSizeY[i] = 0;
-		currentPupilRadius[i] = 0;
+		currentGazePositionLX[i] = 0;
+		currentGazePositionLY[i] = 0;
+		currentEyePositionLX[i] = 0;
+		currentEyePositionLY[i] = 0;
+		currentEyeSizeLX[i] = 0;
+		currentEyeSizeLY[i] = 0;
+		currentPupilRadiusL[i] = 0;
+
+		currentGazePositionRX[i] = 0;
+		currentGazePositionRY[i] = 0;
+		currentEyePositionRX[i] = 0;
+		currentEyePositionRY[i] = 0;
+		currentEyeSizeRX[i] = 0;
+		currentEyeSizeRY[i] = 0;
+		currentPupilRadiusR[i] = 0;
 	}
 }
 
 //when a new eye is given, this updates the stored values in the MAF
 //and computes the new average position
-void Recognizer::updateCurrentEyePosition(Eye eye)
+void Recognizer::updateCurrentLeftEyePosition(Eye leftEye)
 {
 	//put in error check here for freak out case
 	//basically compute the distance from the last one
 	//and if it is huge (more than a few Pupil radii), ignore it
 
-	int totalX = 0;
-	int totalY = 0;
-	int totalEPX = 0;
-	int totalEPY = 0;
-	int totalESX = 0;
-	int totalESY = 0;
-	int totalP = 0;
+	int totalLX = 0;
+	int totalLY = 0;
+	int totalLEPX = 0;
+	int totalLEPY = 0;
+	int totalLESX = 0;
+	int totalLESY = 0;
+	int totalLP = 0;
 
-	for(int i = (MAF_LENGTH - 2); i > 1 ; i--)
+	for(int i = (MAF_LENGTH - 1); i > 1 ; i--)
 	{
-		currentGazePositionX[i] = currentGazePositionX[i-1]; 
-		currentGazePositionY[i] = currentGazePositionY[i-1];
-		currentEyePositionX[i] = currentEyePositionX[i-1];
-		currentEyePositionY[i] = currentEyePositionY[i-1];
-		currentEyeSizeX[i] = currentEyeSizeX[i-1];
-		currentEyeSizeY[i] = currentEyeSizeY[i-1];
-		currentPupilRadius[i] = currentPupilRadius[i-1];
+		//first left
+		currentGazePositionLX[i] = currentGazePositionLX[i-1]; 
+		currentGazePositionLY[i] = currentGazePositionLY[i-1];
+		currentEyePositionLX[i] = currentEyePositionLX[i-1];
+		currentEyePositionLY[i] = currentEyePositionLY[i-1];
+		currentEyeSizeLX[i] = currentEyeSizeLX[i-1];
+		currentEyeSizeLY[i] = currentEyeSizeLY[i-1];
+		currentPupilRadiusL[i] = currentPupilRadiusL[i-1];
 
-		totalX += currentGazePositionX[i]*(MAF_LENGTH - i -1);
-		totalY += currentGazePositionY[i]*(MAF_LENGTH - i -1);
-		totalEPX += currentEyePositionX[i]*(MAF_LENGTH-i-1);
-		totalEPY += currentEyePositionY[i]*(MAF_LENGTH-i-1);
-		totalESX += currentEyeSizeX[i]*(MAF_LENGTH-i-1);
-		totalESY += currentEyeSizeY[i]*(MAF_LENGTH-i-1);
-		totalP += currentPupilRadius[i]*(MAF_LENGTH-i-1); 
+		totalLX += currentGazePositionLX[i]*(MAF_LENGTH - i -1);
+		totalLY += currentGazePositionLY[i]*(MAF_LENGTH - i -1);
+		totalLEPX += currentEyePositionLX[i]*(MAF_LENGTH-i-1);
+		totalLEPY += currentEyePositionLY[i]*(MAF_LENGTH-i-1);
+		totalLESX += currentEyeSizeLX[i]*(MAF_LENGTH-i-1);
+		totalLESY += currentEyeSizeLY[i]*(MAF_LENGTH-i-1);
+		totalLP += currentPupilRadiusL[i]*(MAF_LENGTH-i-1); 
 	}
-	currentGazePositionX[1] = eye.pupilPositionX;
-	currentGazePositionY[1] = eye.pupilPositionY;
-	currentEyePositionX[1] = eye.eyePositionX;
-	currentEyePositionY[1] = eye.eyePositionY;
-	currentEyeSizeX[1] = eye.eyeSizeX;
-	currentEyeSizeY[1] = eye.eyeSizeY;
-	currentPupilRadius[1] = eye.pupilRadius;
+	//handle edge cases
+	//first left
+	currentGazePositionLX[1] = leftEye.pupilPositionX;
+	currentGazePositionLY[1] = leftEye.pupilPositionY;
+	currentEyePositionLX[1] = leftEye.eyePositionX;
+	currentEyePositionLY[1] = leftEye.eyePositionY;
+	currentEyeSizeLX[1] = leftEye.eyeSizeX;
+	currentEyeSizeLY[1] = leftEye.eyeSizeY;
+	currentPupilRadiusL[1] = leftEye.pupilRadius;
 
-	totalX += currentGazePositionX[1]*(MAF_LENGTH-1);
-	totalY += currentGazePositionY[1]*(MAF_LENGTH-1);
-	totalEPX += currentEyePositionX[1]*(MAF_LENGTH-1);
-	totalEPY += currentEyePositionY[1]*(MAF_LENGTH-1);
-	totalESX += currentEyeSizeX[1]*(MAF_LENGTH-1);
-	totalESY += currentEyeSizeY[1]*(MAF_LENGTH-1);
-	totalP += currentPupilRadius[1]*(MAF_LENGTH-1);
+	totalLX += currentGazePositionLX[1]*(MAF_LENGTH-1);
+	totalLY += currentGazePositionLY[1]*(MAF_LENGTH-1);
+	totalLEPX += currentEyePositionLX[1]*(MAF_LENGTH-1);
+	totalLEPY += currentEyePositionLY[1]*(MAF_LENGTH-1);
+	totalLESX += currentEyeSizeLX[1]*(MAF_LENGTH-1);
+	totalLESY += currentEyeSizeLY[1]*(MAF_LENGTH-1);
+	totalLP += currentPupilRadiusL[1]*(MAF_LENGTH-1);
 	
-	currentGazePositionX[0] = (int) totalX/(MAF_DIVISOR);
-	currentGazePositionY[0] = (int) totalY/(MAF_DIVISOR);
-	currentEyePositionX[0] = (int) totalEPX/(MAF_DIVISOR);
-	currentEyePositionY[0] = (int) totalEPY/(MAF_DIVISOR);
-	currentEyeSizeX[0] = (int) totalESX/(MAF_DIVISOR);
-	currentEyeSizeY[0] = (int) totalESY/(MAF_DIVISOR);
-	currentPupilRadius[0] = (int) totalP/(MAF_DIVISOR);
+	currentGazePositionLX[0] = (int) totalLX/(MAF_DIVISOR);
+	currentGazePositionLY[0] = (int) totalLY/(MAF_DIVISOR);
+	currentEyePositionLX[0] = (int) totalLEPX/(MAF_DIVISOR);
+	currentEyePositionLY[0] = (int) totalLEPY/(MAF_DIVISOR);
+	currentEyeSizeLX[0] = (int) totalLESX/(MAF_DIVISOR);
+	currentEyeSizeLY[0] = (int) totalLESY/(MAF_DIVISOR);
+	currentPupilRadiusL[0] = (int) totalLP/(MAF_DIVISOR);
+	
+	
 }
-int calculateCurrentEyePosition()
+void Recognizer::updateCurrentRightEyePosition(Eye rightEye)
 {
-	//get the center of the eye image
-	int eyeHalfX = this.currentEyePositionX[0] + currentEyeSizeX[0]/2;
-	int eyeHalfY = currentEyePositionY[0] + currentEyeSizeY[0]/2;
-	//get the other side of the eye image
-	int eyeFarX = currentEyePositionX[0] + currentEyeSizeX[0];
-	int eyeFarY = currentEyePositionY[0] + currentEyeSizeY[0];
-	//get the bounds of the pupil
-	int pupilTop = currentGazePositionY[0] + currentPupilRadius[0];
-	int pupilBottom = currentGazePositionY[0] - currentPupilRadius[0];
-	int pupilLeft = currentGazePositionX[0] - currentPupilRadius[0];
-	int pupilRight = currentGazePositionX[0] + currentPupilRadius[0];
+	//put in error check here for freak out case
+	//basically compute the distance from the last one
+	//and if it is huge (more than a few Pupil radii), ignore it
 
-	if(pupilRight>eyeFarX && currentGazePositionX[0]>eyeHalfX)
+	int totalRX = 0;
+	int totalRY = 0;
+	int totalREPX = 0;
+	int totalREPY = 0;
+	int totalRESX = 0;
+	int totalRESY = 0;
+	int totalRP = 0;
+
+	for(int i = (MAF_LENGTH - 1); i > 1 ; i--)
+	{
+
+		//now right
+		currentGazePositionRX[i] = currentGazePositionRX[i-1]; 
+		currentGazePositionRY[i] = currentGazePositionRY[i-1];
+		currentEyePositionRX[i] = currentEyePositionRX[i-1];
+		currentEyePositionRY[i] = currentEyePositionRY[i-1];
+		currentEyeSizeRX[i] = currentEyeSizeRX[i-1];
+		currentEyeSizeRY[i] = currentEyeSizeRY[i-1];
+		currentPupilRadiusR[i] = currentPupilRadiusR[i-1];
+
+		totalRX += currentGazePositionRX[i]*(MAF_LENGTH - i -1);
+		totalRY += currentGazePositionRY[i]*(MAF_LENGTH - i -1);
+		totalREPX += currentEyePositionRX[i]*(MAF_LENGTH-i-1);
+		totalREPY += currentEyePositionRY[i]*(MAF_LENGTH-i-1);
+		totalRESX += currentEyeSizeRX[i]*(MAF_LENGTH-i-1);
+		totalRESY += currentEyeSizeRY[i]*(MAF_LENGTH-i-1);
+		totalRP += currentPupilRadiusR[i]*(MAF_LENGTH-i-1); 
+
+	}
+	//handle edge cases
+	
+	//now right
+	currentGazePositionRX[1] = rightEye.pupilPositionX;
+	currentGazePositionRY[1] = rightEye.pupilPositionY;
+	currentEyePositionRX[1] = rightEye.eyePositionX;
+	currentEyePositionRY[1] = rightEye.eyePositionY;
+	currentEyeSizeRX[1] = rightEye.eyeSizeX;
+	currentEyeSizeRY[1] = rightEye.eyeSizeY;
+	currentPupilRadiusR[1] = rightEye.pupilRadius;
+
+	totalRX += currentGazePositionRX[1]*(MAF_LENGTH-1);
+	totalRY += currentGazePositionRY[1]*(MAF_LENGTH-1);
+	totalREPX += currentEyePositionRX[1]*(MAF_LENGTH-1);
+	totalREPY += currentEyePositionRY[1]*(MAF_LENGTH-1);
+	totalRESX += currentEyeSizeRX[1]*(MAF_LENGTH-1);
+	totalRESY += currentEyeSizeRY[1]*(MAF_LENGTH-1);
+	totalRP += currentPupilRadiusR[1]*(MAF_LENGTH-1);
+	
+	currentGazePositionRX[0] = (int) totalRX/(MAF_DIVISOR);
+	currentGazePositionRY[0] = (int) totalRY/(MAF_DIVISOR);
+	currentEyePositionRX[0] = (int) totalREPX/(MAF_DIVISOR);
+	currentEyePositionRY[0] = (int) totalREPY/(MAF_DIVISOR);
+	currentEyeSizeRX[0] = (int) totalRESX/(MAF_DIVISOR);
+	currentEyeSizeRY[0] = (int) totalRESY/(MAF_DIVISOR);
+	currentPupilRadiusR[0] = (int) totalRP/(MAF_DIVISOR);
+}
+
+int Recognizer::calculateCurrentLeftEyePosition()
+{
+	//
+	//get the center of the eye image
+	int eyeHalfX = currentEyePositionLX[0] + (int) currentEyeSizeLX[0]/2;
+	int eyeHalfY = currentEyePositionLY[0] + (int) currentEyeSizeLY[0]/2;
+	//get the other side of the eye image
+	int eyeFarX = currentEyePositionLX[0] + currentEyeSizeLX[0];
+	int eyeFarY = currentEyePositionLY[0] + currentEyeSizeLY[0];
+	//get the bounds of the pupil
+	int pupilTop = currentGazePositionLY[0] + currentPupilRadiusL[0];
+	int pupilBottom = currentGazePositionLY[0] - currentPupilRadiusL[0];
+	int pupilLeft = currentGazePositionLX[0] - currentPupilRadiusL[0];
+	int pupilRight = currentGazePositionLX[0] + currentPupilRadiusL[0];
+
+	if(pupilRight>eyeFarX && currentGazePositionLX[0]>eyeHalfX)
 	{
 		return Eye::LEFT;//the pupil is far right in the image,
 		            //therefore the person is looking left
 	}
-	else if(pupilLeft<currentEyePositionX[0] && currentGazePositionX[0]<eyeHalfX)
+	else if(pupilLeft<currentEyePositionLX[0] && currentGazePositionLX[0]<eyeHalfX)
 	{
 		return Eye::RIGHT;//the pupil is far left in the image,
 		            //therefore the person is looking right
 	}
-	else if(pupilBottom>eyeHalfY && pupilTop>currentEyePositionY[0])
+	else if(pupilBottom>eyeHalfY && pupilTop<currentEyePositionLY[0])
 	{
 		return Eye::UP;
 	}
-	else if(pupilTop<eyeHalfY && pupilBottom<currentEyePositionY[0])
+	else if(pupilTop<eyeHalfY && pupilBottom>currentEyePositionLY[0])
+	{
+		return Eye::DOWN;
+	}
+	else return Eye::CENTER;
+}
+int Recognizer::calculateCurrentRightEyePosition()
+{
+	//
+	//get the center of the eye image
+	int eyeHalfX = currentEyePositionRX[0] + (int) currentEyeSizeRX[0]/2;
+	int eyeHalfY = currentEyePositionRY[0] + (int) currentEyeSizeRY[0]/2;
+	//get the other side of the eye image
+	int eyeFarX = currentEyePositionRX[0] + currentEyeSizeRX[0];
+	int eyeFarY = currentEyePositionRY[0] + currentEyeSizeRY[0];
+	//get the bounds of the pupil
+	int pupilTop = currentGazePositionRY[0] + currentPupilRadiusR[0];
+	int pupilBottom = currentGazePositionRY[0] - currentPupilRadiusR[0];
+	int pupilLeft = currentGazePositionRX[0] - currentPupilRadiusR[0];
+	int pupilRight = currentGazePositionRX[0] + currentPupilRadiusR[0];
+
+	if(pupilRight>eyeFarX && currentGazePositionRX[0]>eyeHalfX)
+	{
+		return Eye::LEFT;//the pupil is far right in the image,
+		            //therefore the person is looking left
+	}
+	else if(pupilLeft<currentEyePositionRX[0] && currentGazePositionRX[0]<eyeHalfX)
+	{
+		return Eye::RIGHT;//the pupil is far left in the image,
+		            //therefore the person is looking right
+	}
+	else if(pupilBottom>eyeHalfY && pupilTop<currentEyePositionRY[0])
+	{
+		return Eye::UP;
+	}
+	else if(pupilTop<eyeHalfY && pupilBottom>currentEyePositionRY[0])
 	{
 		return Eye::DOWN;
 	}
@@ -127,66 +249,178 @@ int calculateCurrentEyePosition()
 
 int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 {
-	int newState;
-	if(!newEyeLeft.noPupilDetected)
-	{
-		blinkFrameCount = 0;
+	int newStateL;
+	int newStateR;
+	if(!newEyeLeft.noPupilDetected && !newEyeRight.noPupilDetected)
+	{//neither eye is blinking
+		blinkFrameCountLeft = 0;
+		blinkFrameCountRight=0;
 
 		//first store the old averaged position;
-		int oldGazePositionX = currentGazePositionX[0];
-		int oldGazePositionY = currentGazePositionY[0];
+		int oldGazePositionLX = currentGazePositionLX[0];
+		int oldGazePositionLY = currentGazePositionLY[0];
+		int oldGazePositionRX = currentGazePositionRX[0];
+		int oldGazePositionRY = currentGazePositionRY[0];
 		//then update the gaze position
-		updateCurrentEyePosition(newEyeLeft);
+		updateCurrentLeftEyePosition(newEyeLeft);
+		updateCurrentRightEyePosition(newEyeLeft);
 		
-		newState = calculateCurrentEyePosition();
-		if(newState == currentLeftEyeAction)
+		newStateL = calculateCurrentLeftEyePosition();
+		newStateR = calculateCurrentRightEyePosition();
+		if(newStateL == currentLeftEyeAction)
 		{
 			currentLeftEyeActionCount++;
 			if(currentLeftEyeActionCount>ACTION_LIMIT)
 			{//send the appropriate key
-				switch(currentLeftEyeActionCount)
-				{
-				case Eye::LEFT:
-					System::Windows::Forms::SendKeys::SendWait("a");
-					break;
-				case Eye::RIGHT:
-					System::Windows::Forms::SendKeys::SendWait("d");
-					break;
-				case Eye::UP:
-					System::Windows::Forms::SendKeys::SendWait("w");
-					break;
-				case Eye::DOWN:
-					System::Windows::Forms::SendKeys::SendWait("s");
-					break;
-				}
+				output(currentLeftEyeAction);
+				currentLeftEyeActionCount = 0;
 			}
-			currentLeftEyeActionCount = 0;
 		}
 		else
 		{
 			currentLeftEyeActionCount = 0;
-			currentLeftEyeAction = newState;
+			currentLeftEyeAction = newStateL;
+		}
+
+		if(newStateR == currentRightEyeAction)
+		{
+			currentRightEyeActionCount++;
+			if(currentRightEyeActionCount>ACTION_LIMIT)
+			{//send the appropriate key
+				output(currentRightEyeAction);
+				currentRightEyeActionCount = 0;
+			}
+		}
+		else
+		{
+			currentRightEyeActionCount = 0;
+			currentRightEyeAction = newStateR;
 		}
 	}
-	else
-	{
+	else if(newEyeLeft.noPupilDetected && !newEyeRight.noPupilDetected)
+	{//left eye is blinking, not right
+		//Get the Position of the Right Eye!
+		newStateR = calculateCurrentRightEyePosition();
+		if(newStateR == currentRightEyeAction)
+		{
+			currentRightEyeActionCount++;
+			if(currentRightEyeActionCount>ACTION_LIMIT)
+			{//send the appropriate key
+				output(currentRightEyeAction);
+				currentRightEyeActionCount = 0;
+			}
+		}
+		else
+		{
+			currentRightEyeActionCount = 0;
+			currentRightEyeAction = newStateR;
+		}
+
+		blinkFrameCountRight=0;
 		//HANDLE BLINK CASES!
-		blinkFrameCount++;
-		if(blinkFrameCount>=BLINK_LIMIT)
+		blinkFrameCountLeft++;
+		if(blinkFrameCountLeft>=BLINK_LIMIT)
 		{
 			currentLeftEyeAction = LEFT_CLOSED;
 			System::Windows::Forms::SendKeys::SendWait("q");
-			blinkFrameCount=0;
+			blinkFrameCountLeft=0;
 		}
 	}
-	return CENTER;
+	else if(newEyeRight.noPupilDetected && !newEyeLeft.noPupilDetected)
+	{//right eye is blinking, not left
+		//get the position of the left eye!
+		newStateL = calculateCurrentLeftEyePosition();
+		if(newStateL == currentLeftEyeAction)
+		{
+			currentLeftEyeActionCount++;
+			if(currentLeftEyeActionCount>ACTION_LIMIT)
+			{//send the appropriate key
+				output(currentLeftEyeAction);
+				currentLeftEyeActionCount = 0;
+			}
+		}
+		else
+		{
+			currentLeftEyeActionCount = 0;
+			currentLeftEyeAction = newStateL;
+		}
+		//HANDLE BLINK CASES!
+		blinkFrameCountRight++;
+		if(blinkFrameCountRight>=BLINK_LIMIT)
+		{
+			currentRightEyeAction = RIGHT_CLOSED;
+			System::Windows::Forms::SendKeys::SendWait("e");
+			blinkFrameCountRight=0;
+		}
+	}
+	else if(newEyeRight.noPupilDetected && newEyeLeft.noPupilDetected)
+	{//both eyes are blinking!
+		//HANDLE BLINK CASES!
+		blinkFrameCountRight++;
+		blinkFrameCountLeft++;
+		if(blinkFrameCountRight>=BLINK_LIMIT && blinkFrameCountLeft>=BLINK_LIMIT)
+		{
+			currentRightEyeAction = RIGHT_CLOSED;
+			currentLeftEyeAction = LEFT_CLOSED;
+			System::Windows::Forms::SendKeys::SendWait("r");
+			blinkFrameCountRight=0;
+			blinkFrameCountLeft=0;
+		}
+		else if(blinkFrameCountRight>=BLINK_LIMIT)
+		{
+			currentRightEyeAction = RIGHT_CLOSED;
+			System::Windows::Forms::SendKeys::SendWait("e");
+			blinkFrameCountRight=0;
+		}
+		else if(blinkFrameCountLeft>=BLINK_LIMIT)
+		{
+			currentLeftEyeAction = LEFT_CLOSED;
+			System::Windows::Forms::SendKeys::SendWait("q");
+			blinkFrameCountLeft=0;
+		}
+	}
+	return currentLeftEyeAction;
+}
+
+void Recognizer::output(int currentEyeAction)
+{
+	switch(currentEyeAction)
+	{
+	case Eye::LEFT:
+		System::Windows::Forms::SendKeys::SendWait("a");
+		break;
+	case Eye::RIGHT:
+		System::Windows::Forms::SendKeys::SendWait("d");
+		break;
+	case Eye::UP:
+		System::Windows::Forms::SendKeys::SendWait("w");
+		break;
+	case Eye::DOWN:
+		System::Windows::Forms::SendKeys::SendWait("s");
+		break;
+	}
 }
 
 //Deconstructor
 Recognizer::~Recognizer()
 {
-	free(currentGazePositionX);
-	free(currentGazePositionY);
+	//Get rid of allocated MAF stuff
+	//left ones
+	free(currentGazePositionLX);
+	free(currentGazePositionLY);
+	free(currentEyePositionLX);
+	free(currentEyePositionLY);
+	free(currentEyeSizeLX);
+	free(currentEyeSizeLY);
+	free(currentPupilRadiusL);
+	//right ones
+	free(currentGazePositionRX);
+	free(currentGazePositionRY);
+	free(currentEyePositionRX);
+	free(currentEyePositionRY);
+	free(currentEyeSizeRX);
+	free(currentEyeSizeRY);
+	free(currentPupilRadiusR);
 }
 
 
