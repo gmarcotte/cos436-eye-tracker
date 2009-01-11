@@ -27,8 +27,12 @@ Recognizer::Recognizer()
 	currentEyeSizeRX = (int*) malloc(sizeof(int) * MAF_LENGTH);
 	currentEyeSizeRY = (int*) malloc(sizeof(int) * MAF_LENGTH);
 	currentPupilRadiusR = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	//brows
+	browPositionL = (int*) malloc(sizeof(int) * MAF_LENGTH);
+	browPositionR = (int*) malloc(sizeof(int) * MAF_LENGTH);
+
 	//check memory
-	if(currentPupilRadiusR == NULL){printf("out of memory\n");return;}
+	if(browPositionR == NULL){printf("out of memory\n");return;}
 
 	for(int i = 0; i < MAF_LENGTH-1; i++)
 	{
@@ -47,6 +51,9 @@ Recognizer::Recognizer()
 		currentEyeSizeRX[i] = 0;
 		currentEyeSizeRY[i] = 0;
 		currentPupilRadiusR[i] = 0;
+
+		browPositionL[i] = 0;
+		browPositionR[i] = 0;
 	}
 }
 
@@ -255,7 +262,6 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 	{//neither eye is blinking
 		blinkFrameCountLeft = 0;
 		blinkFrameCountRight=0;
-
 		//first store the old averaged position;
 		int oldGazePositionLX = currentGazePositionLX[0];
 		int oldGazePositionLY = currentGazePositionLY[0];
@@ -322,7 +328,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		if(blinkFrameCountLeft>=BLINK_LIMIT)
 		{
 			currentLeftEyeAction = LEFT_CLOSED;
-			System::Windows::Forms::SendKeys::SendWait("q");
+			System::Windows::Forms::SendKeys::SendWait("e");
 			blinkFrameCountLeft=0;
 		}
 	}
@@ -349,7 +355,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		if(blinkFrameCountRight>=BLINK_LIMIT)
 		{
 			currentRightEyeAction = RIGHT_CLOSED;
-			System::Windows::Forms::SendKeys::SendWait("e");
+			System::Windows::Forms::SendKeys::SendWait("q");
 			blinkFrameCountRight=0;
 		}
 	}
@@ -369,16 +375,41 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		else if(blinkFrameCountRight>=BLINK_LIMIT)
 		{
 			currentRightEyeAction = RIGHT_CLOSED;
-			System::Windows::Forms::SendKeys::SendWait("e");
+			System::Windows::Forms::SendKeys::SendWait("q");
 			blinkFrameCountRight=0;
 		}
 		else if(blinkFrameCountLeft>=BLINK_LIMIT)
 		{
 			currentLeftEyeAction = LEFT_CLOSED;
-			System::Windows::Forms::SendKeys::SendWait("q");
+			System::Windows::Forms::SendKeys::SendWait("e");
 			blinkFrameCountLeft=0;
 		}
 	}
+	
+	//now do some brows
+	bool rightIsRaised = false;
+	bool leftIsRaised = false;
+	for(int i = (MAF_LENGTH - 1); i > 0 ; i--)
+	{
+		browPositionL[i] = browPositionL[i-1]; 
+		browPositionR[i] = browPositionR[i-1];
+	}
+	browPositionL[0] = newEyeLeft.browPositionY;
+	browPositionR[0] = newEyeRight.browPositionY;
+	if(browPositionL[0] < (browPositionL[MAF_LENGTH-1] - (int) 1.5*newEyeLeft.browHeight))
+	{
+		leftIsRaised = true;
+	}
+	if(browPositionR[0] < (browPositionR[MAF_LENGTH-1] - (int) 1.5*newEyeRight.browHeight))
+	{
+		rightIsRaised = true;
+	}
+	if(leftIsRaised && rightIsRaised)
+	{
+		System::Windows::Forms::SendKeys::SendWait("f");
+	}
+	
+
 	return currentLeftEyeAction;
 }
 
@@ -387,10 +418,10 @@ void Recognizer::output(int currentEyeAction)
 	switch(currentEyeAction)
 	{
 	case Eye::LEFT:
-		System::Windows::Forms::SendKeys::SendWait("a");
+		System::Windows::Forms::SendKeys::SendWait("d");
 		break;
 	case Eye::RIGHT:
-		System::Windows::Forms::SendKeys::SendWait("d");
+		System::Windows::Forms::SendKeys::SendWait("a");
 		break;
 	case Eye::UP:
 		System::Windows::Forms::SendKeys::SendWait("w");
