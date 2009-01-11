@@ -49,6 +49,9 @@ class Recognizer
 	int* currentEyeSizeRY;
 	int* currentPupilRadiusR;
 
+	int* browPositionL;
+	int* browPositionR;
+
 	int currentLeftEyeAction;
 	int currentLeftEyeActionCount;
 	int currentRightEyeAction;

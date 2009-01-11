@@ -15,7 +15,7 @@ Eye::Eye()
 }
 Eye::Eye(bool noPupDet, int pupPosX, int pupPosY,
 		int pupRad, int eyeSzX, int eyeSzY, int eyePosX,
-		int eyePosY, int browPosY)
+		int eyePosY, int browPosY, int browHt)
 {
 	  noPupilDetected = noPupDet;
 	  pupilPositionX=pupPosX;
@@ -26,6 +26,7 @@ Eye::Eye(bool noPupDet, int pupPosX, int pupPosY,
 	  eyePositionX=eyePosX;
 	  eyePositionY=eyePosY;
 	  browPositionY=browPosY;
+	  browHeight=browHt;
 }
 int Eye::getRelativeEyePositionX()
 {

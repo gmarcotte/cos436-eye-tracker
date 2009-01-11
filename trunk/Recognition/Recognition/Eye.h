@@ -15,6 +15,7 @@ public:
 	int eyePositionX;
 	int eyePositionY;
 	int browPositionY;
+	int browHeight;
 	int getRelativeEyePositionX();
 	int getRelativeEyePositionY();
 	//is the eye looking up, down, left, right or center?
@@ -22,7 +23,7 @@ public:
 	Eye();
 	Eye(bool noPupDet, int pupPosX, int pupPosY,
 		int pupRad, int eyeSzX, int eyeSzY, int eyePosX,
-		int eyePosY, int browPosY);
+		int eyePosY, int browPosY, int browHt);
 };
 
 #endif

@@ -23,8 +23,8 @@ int main(int argc, char* argv[])
 
 	//create recognizer
 	Recognizer* recog = new Recognizer(); 
-	Eye* eye1 = new Eye(false, 150, 151, 30, 100, 101, 100, 99, 50);
-	Eye* eye2 = new Eye(false, 150, 151, 30, 100, 101, 100, 99, 50);
+	Eye* eye1 = new Eye(false, 150, 151, 30, 100, 101, 100, 99, 50, 10);
+	Eye* eye2 = new Eye(false, 150, 151, 30, 100, 101, 100, 99, 50, 10);
 	while(true)
 	{
 		recog->updateState(*eye1, *eye2);
@@ -38,10 +38,36 @@ int main(int argc, char* argv[])
 		
 		delete eye1;
 		delete eye2;
-		if(a>5)
+		switch(a)
+		{
+		case 1://left
+			eye1 = new Eye(false, 110, 111, 30, 100, 101, 100, 99, 40, 10);
+			eye2 = new Eye(false, 110, 111, 30, 100, 101, 100, 99, 40, 10);
 			break;
-		eye1 = new Eye(false, 110, 111, 30, 100, 101, 100, 99, 40);
-	    eye2 = new Eye(false, 110, 111, 30, 100, 101, 100, 99, 40);
+		case 2://center
+			eye1 = new Eye(false, 150, 151, 30, 100, 101, 100, 99, 50, 10);
+			eye2 = new Eye(false, 150, 151, 30, 100, 101, 100, 99, 50, 10);
+			break;
+		case 3://right
+			eye1 = new Eye(false, 190, 191, 30, 100, 101, 100, 99, 40, 10);
+			eye2 = new Eye(false, 190, 191, 30, 100, 101, 100, 99, 40, 10);
+			break;
+		case 4://blink right
+			eye1 = new Eye(false, 190, 191, 30, 100, 101, 100, 99, 40, 10);
+			eye2 = new Eye(true, 190, 191, 30, 100, 101, 100, 99, 40, 10);
+			break;
+		case 5://blink left
+			eye1 = new Eye(true, 190, 191, 30, 100, 101, 100, 99, 10, 10);
+			eye2 = new Eye(false, 190, 191, 30, 100, 101, 100, 99, 10, 10);
+			break;
+		case 6://blink both
+			eye1 = new Eye(true, 190, 191, 30, 100, 101, 100, 99, 40, 10);
+			eye2 = new Eye(true, 190, 191, 30, 100, 101, 100, 99, 40, 10);
+			break;
+		}
+		if(a>9)
+			break;
+
 	}
 	//example of how to send a key
     System::Windows::Forms::SendKeys::SendWait("m");
