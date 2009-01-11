@@ -19,6 +19,7 @@ double dist(CvPoint a, CvPoint b)
 	return sqrt( (double)((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)) );
 }
 
+
 void updatePupil(IplImage* inputImg, Pupil* update_pup)
 {
 	CvMemStorage* storage = cvCreateMemStorage(1000);
@@ -120,8 +121,9 @@ void updateEyebrow(IplImage* img, CvBox2D* eyebrow, Pupil* pupil)
 	while (curr_contour != NULL)
 	{
 		CvBox2D box = cvMinAreaRect2(curr_contour);
-		if ( abs(box.center.x - pupil->x) < 100 &&
-				 (pupil->y - box.center.y) > 10 )
+		if ( pupil->radius == 0 ||
+				 (abs(box.center.x - pupil->x) < 100 &&
+				  (pupil->y - box.center.y) > 10) )
 		{
 			if (run_once == 0)
 			{
@@ -138,6 +140,44 @@ void updateEyebrow(IplImage* img, CvBox2D* eyebrow, Pupil* pupil)
 	cvReleaseImage(&scratch);
 }
 
+
+
+
+void updateEye(IplImage* img, CvBox2D* eye, Pupil* pupil, CvBox2D* eyebrow)
+{
+	CvSeq* contours;
+	IplImage* scratch = cvCloneImage(img);
+	CvMemStorage* storage = cvCreateMemStorage(0);
+	cvFindContours(scratch, storage, &contours);
+	CvSeq* curr_contour = contours;
+
+	int run_once = 0;
+	CvBox2D best_eye;
+	best_eye.center.x = -1;
+	curr_contour = contours;
+	while (curr_contour != NULL)
+	{
+		CvBox2D box = cvMinAreaRect2(curr_contour);
+		if ( ((int)box.angle % 90) < 20 &&
+				  (eyebrow->center.x != -1 ||
+					 ( abs(box.center.x - eyebrow->center.x) < 100 &&
+					   box.center.y - eyebrow->center.y > 0) ) &&
+			    (pupil->radius == 0 ||
+				   ( abs(box.center.x - pupil->x) < max(box.size.width, box.size.height) &&
+					   abs(box.center.y - pupil->y) < max(box.size.width, box.size.height) ) ) )
+		{
+			if (run_once == 0)
+			{
+				best_eye = box;
+				run_once = 1;
+			}
+			else if ( (box.size.height * box.size.width) > (best_eye.size.height * best_eye.size.width))
+				best_eye = box;
+		}
+		curr_contour = curr_contour->h_next;
+	}
+	*(eye) = best_eye;
+}
 
 int main(int argc, char* argv[])
 {
@@ -192,18 +232,21 @@ int main(int argc, char* argv[])
 
 	char original_names[NUM_INPUTS][MAX_STRING];
 	char modified_names[NUM_INPUTS][MAX_STRING];
-	char ellipse_names[NUM_INPUTS][MAX_STRING];
-	char threshold_names[NUM_INPUTS][MAX_STRING];
+	char eyebrow_names[NUM_INPUTS][MAX_STRING];
+	char pupil_names[NUM_INPUTS][MAX_STRING];
+	char eye_names[NUM_INPUTS][MAX_STRING];
 	for (i=0; i<NUM_INPUTS; i++)
 	{
 		sprintf_s(original_names[i], MAX_STRING, "Input %d: Direct Feed", i);
 		sprintf_s(modified_names[i], MAX_STRING, "Input %d: Modified Eye Image", i);
-		sprintf_s(ellipse_names[i], MAX_STRING, "Input %d: Ellipse Image", i);
-		sprintf_s(threshold_names[i], MAX_STRING, "Input %d: Threshold Image", i);
+		sprintf_s(eyebrow_names[i], MAX_STRING, "Input %d: Thresholded Eyebrow", i);
+		sprintf_s(eye_names[i], MAX_STRING, "Input %d: Thresholded Eye", i);
+		sprintf_s(pupil_names[i], MAX_STRING, "Input %d: Thresholded Pupil", i);
 		captures[i]->openInWindow(original_names[i]);
 		cvNamedWindow(modified_names[i]);
-		cvNamedWindow(ellipse_names[i]);
-		cvNamedWindow(threshold_names[i]);
+		cvNamedWindow(eyebrow_names[i]);
+		cvNamedWindow(eye_names[i]);
+		cvNamedWindow(pupil_names[i]);
 
 		original_eyes[i] = cvCreateImage(cvSize(captures[i]->getWidth(), captures[i]->getHeight()),
 																		 IPL_DEPTH_8U, 3);
@@ -235,7 +278,7 @@ int main(int argc, char* argv[])
 
 	Pupil pupils[NUM_INPUTS];
 	CvBox2D eyebrows[NUM_INPUTS];
-	CvRect eyes[NUM_INPUTS];
+	CvBox2D eyes[NUM_INPUTS];
 	for (i = 0; i < NUM_INPUTS; i++)
 	{
 		pupils[i].x = 0;
@@ -246,7 +289,9 @@ int main(int argc, char* argv[])
 		eyebrows[i].center = cvPoint2D32f(0, 0);
 		eyebrows[i].size = cvSize2D32f(0, 0);
 
-		eyes[i] = cvRect(0, 0, 0, 0);
+		eyes[i].angle = 0;
+		eyes[i].center = cvPoint2D32f(0, 0);
+		eyes[i].size = cvSize2D32f(0, 0);
 	}
 
 	char c;
@@ -263,7 +308,7 @@ int main(int argc, char* argv[])
 			// Pupil detection
 			cvThreshold(modified_eyes[i], threshold_eyes[i], pupil_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
 			cvCanny(threshold_eyes[i], threshold_eyes[i], canny_low->getValue(), canny_high->getValue(), 3);
-			cvShowImage(threshold_names[i], threshold_eyes[i]);
+			cvShowImage(pupil_names[i], threshold_eyes[i]);
 			updatePupil(threshold_eyes[i], &pupils[i]);
 			printf("Found pupil %d: (%d, %d) - %d\n", i, pupils[i].x, pupils[i].y, pupils[i].radius);
 			if (pupils[i].radius > 0)
@@ -272,7 +317,7 @@ int main(int argc, char* argv[])
 
 			// Eyebrow Detection
 			cvThreshold(modified_eyes[i], threshold_eyes[i], eyebrow_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
-			cvShowImage(ellipse_names[i], threshold_eyes[i]);
+			cvShowImage(eyebrow_names[i], threshold_eyes[i]);
 			updateEyebrow(threshold_eyes[i], &eyebrows[i], &pupils[i]);		
 			if ( (eyebrows[i].center.x >= 0 && eyebrows[i].center.x <= captures[i]->getWidth()) &&
 					 (eyebrows[i].center.y >= 0 && eyebrows[i].center.y <= captures[i]->getHeight()) )
@@ -289,6 +334,28 @@ int main(int argc, char* argv[])
 			else
 			{
 				printf("No eyebrow detected.\n");
+			}
+			
+
+			// Eye Detection
+			cvThreshold(modified_eyes[i], threshold_eyes[i], eye_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
+			cvShowImage(eye_names[i], threshold_eyes[i]);
+			updateEye(threshold_eyes[i], &eyes[i], &pupils[i], &eyebrows[i]);	
+			if ( (eyes[i].center.x >= 0 && eyes[i].center.x <= captures[i]->getWidth()) &&
+					 (eyes[i].center.y >= 0 && eyes[i].center.y <= captures[i]->getHeight()) )
+			{
+				printf("Best Eye: \n\tPos: %6.2f, %6.2f, \n\tSize: %6.2f, %6.2f, \n\tAngle: %6.2f\n", 
+							  eyes[i].center.x, eyes[i].center.y, 
+							  eyes[i].size.width, eyes[i].size.height,
+							  eyes[i].angle);
+				cvDrawEllipse(original_eyes[i],
+											cvPoint(eyes[i].center.x, eyes[i].center.y), 
+											cvSize(eyes[i].size.height / 2, eyes[i].size.width / 2), 
+											eyes[i].angle, 0.0, 360.0, CV_RGB(0, 0, 255), 2);
+			}
+			else
+			{
+				printf("No eye detected.\n");
 			}
 
 			cvShowImage(modified_names[i], original_eyes[i]);
@@ -308,8 +375,9 @@ int main(int argc, char* argv[])
 		cvReleaseImage(&modified_eyes[i]);
 		cvReleaseImage(&threshold_eyes[i]);
 		cvDestroyWindow(modified_names[i]);
-		cvDestroyWindow(ellipse_names[i]);
-		cvDestroyWindow(threshold_names[i]);
+		cvDestroyWindow(eyebrow_names[i]);
+		cvDestroyWindow(eye_names[i]);
+		cvDestroyWindow(pupil_names[i]);
 		delete captures[i];
 		captures[i] = NULL;
 	}
