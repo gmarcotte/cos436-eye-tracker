@@ -301,8 +301,8 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			currentLeftEyeActionCount++;
 			if(currentLeftEyeActionCount>ACTION_LIMIT)
 			{//send the appropriate key
-				printf("neither is blinking, left is sending a %d,/n", currentLeftEyeAction);
-				output(currentLeftEyeAction);
+				printf("neither is blinking, left is sending a %d,\n", currentLeftEyeAction);
+				//output(currentLeftEyeAction);
 				currentLeftEyeActionCount = 0;
 			}
 		}
@@ -317,8 +317,8 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			currentRightEyeActionCount++;
 			if(currentRightEyeActionCount>ACTION_LIMIT)
 			{//send the appropriate key
-				printf("neither is blinking, right is sending a %d,/n", currentRightEyeAction);
-				output(currentRightEyeAction);
+				printf("neither is blinking, right is sending a %d,\n", currentRightEyeAction);
+				//output(currentRightEyeAction);
 				currentRightEyeActionCount = 0;
 			}
 		}
@@ -326,6 +326,11 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		{
 			currentRightEyeActionCount = 0;
 			currentRightEyeAction = newStateR;
+		}
+
+		if(currentRightEyeAction == currentLeftEyeAction)
+		{
+			output(currentRightEyeAction);
 		}
 	}
 	else if(newEyeLeft.noPupilDetected && !newEyeRight.noPupilDetected)
@@ -337,7 +342,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			currentRightEyeActionCount++;
 			if(currentRightEyeActionCount>ACTION_LIMIT)
 			{//send the appropriate key
-				printf("left is blinking, right is sending a %d,/n", currentRightEyeAction);
+				printf("left is blinking, right is sending a %d,\n", currentRightEyeAction);
 				output(currentRightEyeAction);
 				currentRightEyeActionCount = 0;
 			}
@@ -368,7 +373,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			currentLeftEyeActionCount++;
 			if(currentLeftEyeActionCount>ACTION_LIMIT)
 			{//send the appropriate key
-				printf("right is blinking, left is sending a %d,/n", currentLeftEyeAction);
+				printf("right is blinking, left is sending a %d,\n", currentLeftEyeAction);
 				output(currentLeftEyeAction);
 				currentLeftEyeActionCount = 0;
 			}
@@ -445,6 +450,12 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 	return currentLeftEyeAction;
 }
 
+void printinfo()
+{
+	printf("pupilLeft:%d, pupilRight:%d\n", calibrationPupilLeftL, calibrationPupilRightL); 
+	printf("currentPosRad:%d,%d\n", currentGazePositionLX[0], currentPupilRadiusL[0]);
+	printf("lastPosRad:%d,%d\n", currentGazePositionLX[1], currentPupilRadiusL[1]);
+}
 void Recognizer::output(int currentEyeAction)
 {
 	switch(currentEyeAction)
@@ -452,13 +463,13 @@ void Recognizer::output(int currentEyeAction)
 	case Eye::LEFT:
 	{
 		printf("Sending d\n");
-		printf("pupilLeft:%d, currentPosRad:%d,%d", calibrationPupilLeftL,currentGazePositionLX[0], currentPupilRadiusL[0]); 
 		System::Windows::Forms::SendKeys::SendWait("d");
 		break;
 	}
 	case Eye::RIGHT:
 	{
 		printf("Sending a\n");
+		printinfo();
 		System::Windows::Forms::SendKeys::SendWait("a");
 		break;
 	}
