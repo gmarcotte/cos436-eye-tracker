@@ -15,12 +15,24 @@
 #endif
 
 
+void calibration_mouse_handler(
+		int event, int x, int y, int flags, void* param);
+
 class Pupil {
 public:
 	int x;
 	int y;
 	int radius;
 };
+
+void draw_box(IplImage* img, CvRect rect, CvScalar color)
+{
+	cvRectangle(
+		img,
+		cvPoint(rect.x, rect.y),
+		cvPoint(rect.x + rect.width, rect.y + rect.height),
+		color, 2);
+}
 
 double dist(CvPoint a, CvPoint b)
 {
@@ -208,146 +220,138 @@ void updateEyebrow(IplImage* img, CvBox2D* eyebrow, Pupil* pupil)
 }
 
 
-
-
-void updateEye(IplImage* img, CvRect* eye, Pupil* pupil, CvBox2D* eyebrow)
-{
-	CvSeq* contours;
-	IplImage* scratch = cvCloneImage(img);
-	CvMemStorage* storage = cvCreateMemStorage(0);
-	cvFindContours(scratch, storage, &contours);
-	CvSeq* curr_contour = contours;
-
-	int run_once = 0;
-	CvRect best_eye;
-	best_eye.x = -1;
-	curr_contour = contours;
-	while (curr_contour != NULL)
-	{
-		CvRect box = cvBoundingRect(curr_contour);
-		if ( ((eyebrow->center.x != -1 ||
-					 ( abs(box.x - eyebrow->center.x) < 100 &&
-					   box.y - eyebrow->center.y > 0) ) &&
-			    (pupil->radius == 0 ||
-					 boxContainsCircle(box, cvPoint(pupil->x, pupil->y), pupil->radius))) )
-		{
-			if (run_once == 0)
-			{
-				best_eye = box;
-				run_once = 1;
-			}
-			else if ( (box.height * box.width) > (best_eye.height * best_eye.width))
-				best_eye = box;
-		}
-		curr_contour = curr_contour->h_next;
-	}
-	*(eye) = best_eye;
-	cvReleaseImage(&scratch);
-	cvReleaseMemStorage(&storage);
-}
+CvRect box;
+bool drawing_box = false;
+bool need_update = false;
+bool drawn = false;
 
 int main(int argc, char* argv[])
 {
 	int i;
-	CaptureHandler* captures[NUM_INPUTS];
-	int index;
-	for (i=0, index=0; index<NUM_INPUTS; i++)
+	char c;
+	bool from_camera = false;
+	CaptureHandler* capture = NULL;
+	if (1 < argc)
 	{
-		if (i >= argc - 1 + NUM_INPUTS)
-		{
-			// If we've expended all command line arguments as well as camera numbers
-			// 0 to NUM_INPUTS - 1, then free up memory and quit with an error
-			printf("Error: could only find %d out of %d required inputs, exiting!\n", index, NUM_INPUTS);
-			int j;
-			for (j=0; j<index; j++)
-				delete captures[j];
-			return 0;
+		// The user supplied a command line path for video analysis
+		try {
+			capture = new CaptureHandler(argv[1]);
+		} catch(CaptureHandler::FileReadError) {
+			printf("Read Error: skipping file %s\n", argv[1]);
+			delete capture;
 		}
-		if (i + 1 < argc)
-		{
-			// There are command-line arguments left, so try to load video
-			try {
-				captures[index] = new CaptureHandler(argv[i+1]);
-			} catch(CaptureHandler::FileReadError) {
-				printf("Read Error: skipping file %s\n", argv[i+1]);
-				continue;
-			}
-			printf("Eye %d Tracking from %s\n", index, argv[i+1]);
-			captures[index]->printFullState();
-			printf("\n\n");
-			index++;
-		}
-		else
-		{
-			// There are no command-line arguments left, so try to load a camera
-			try {
-				captures[index] = new CaptureHandler(i + 1 - argc);
-			} catch(CaptureHandler::CameraReadError) {
-				printf("Not Found: skipping camera %d\n", i + 1 - argc);
-				continue;
-			}
-			printf("Eye %d Tracking from Camera %d\n", index, i + 1 - argc);
-			captures[index]->printFullState();
-			index++;
-		}
+		printf("Tracking from %s:\n", argv[1]);
+		capture->printFullState();
+		printf("\n\n");
 	}
 
+	while (!capture)
+	{
+		// No command-line argument was given, so try to load a camera
+		try {
+			capture = new CaptureHandler();
+		} catch(CaptureHandler::CameraReadError) {
+			printf("ERROR: Please connect a camera, and then press enter.\n");
+			getchar();
+			continue;
+		}
+		printf("Tracking from camera:\n");
+		from_camera = true;
+		capture->printFullState();
+	}
+
+	char* original_name = "Direct Camera Feed";
+	cvNamedWindow(original_name);
+	IplImage* original_img = cvCreateImage(cvSize(capture->getWidth(), capture->getHeight()),
+																				 IPL_DEPTH_8U, 3);
+
+	printf("\n\n******** ENTERING CALIBRATION **************\n\n");
+	printf("Please position the camera so that both eye regions (including eyebrows and forehead) are clearly visible.\n");
+	printf("Press SPACEBAR to continue...\n");
+	while( (c = cvWaitKey(33)) != 32)
+	{
+		capture->advance();
+		capture->getCurrentFrame(original_img, CV_CVTIMG_FLIP);
+		cvShowImage(original_name, original_img);
+	}
+
+	IplImage* shown_img = cvCloneImage(original_img);
+	CvRect regions[NUM_INPUTS];
+
+	cvSetMouseCallback(original_name, calibration_mouse_handler);
+	printf("Please select the full eye regions, one at a time.  Be sure to include the full eyebrow and forehead.\n");
+	printf("Press SPACEBAR after each selection...\n");
+	box = cvRect(-1, -1, 0, 0);
+	CvScalar colors[] = {CV_RGB(255, 0, 0), CV_RGB(0, 255, 0), CV_RGB(0, 0, 255),
+										   CV_RGB(255, 255, 0), CV_RGB(255, 0, 255), CV_RGB(0, 255, 255)};
+	for (i=0; i<NUM_INPUTS; i++)
+	{
+		printf("Please select REGION %d!\n", i);
+		while ( ((c = cvWaitKey(15)) != 32) || !drawn)
+		{
+			cvCopyImage(original_img, shown_img);
+			if (drawing_box || drawn)
+				draw_box(shown_img, box, colors[i%6]);
+			cvShowImage(original_name, shown_img);
+		}
+		regions[i] = box;
+		draw_box(original_img, box, colors[i%6]);
+		drawn = false;
+		drawing_box = false;
+	}
+	
+	printf("Thank you.  Please check the windows to ensure regions were chosen properly.\n\n");
+	
 	// Set up the eye trackers, image memory and display windows for each input
 	IplImage* original_eyes[NUM_INPUTS];
 	IplImage* modified_eyes[NUM_INPUTS];
 	IplImage* threshold_eyes[NUM_INPUTS];
 
-	char original_names[NUM_INPUTS][MAX_STRING];
 	char modified_names[NUM_INPUTS][MAX_STRING];
 	char eyebrow_names[NUM_INPUTS][MAX_STRING];
 	char pupil_names[NUM_INPUTS][MAX_STRING];
-	char eye_names[NUM_INPUTS][MAX_STRING];
 	for (i=0; i<NUM_INPUTS; i++)
 	{
-		sprintf_s(original_names[i], MAX_STRING, "Input %d: Direct Feed", i);
-		sprintf_s(modified_names[i], MAX_STRING, "Input %d: Modified Eye Image", i);
+		sprintf_s(modified_names[i], MAX_STRING, "Input %d: Tracking Results", i);
 		sprintf_s(eyebrow_names[i], MAX_STRING, "Input %d: Thresholded Eyebrow", i);
-		sprintf_s(eye_names[i], MAX_STRING, "Input %d: Thresholded Eye", i);
 		sprintf_s(pupil_names[i], MAX_STRING, "Input %d: Thresholded Pupil", i);
-		captures[i]->openInWindow(original_names[i]);
 		cvNamedWindow(modified_names[i]);
 		cvNamedWindow(eyebrow_names[i]);
-		cvNamedWindow(eye_names[i]);
 		cvNamedWindow(pupil_names[i]);
-
-		original_eyes[i] = cvCreateImage(cvSize(captures[i]->getWidth(), captures[i]->getHeight()),
-																		 IPL_DEPTH_8U, 3);
-		modified_eyes[i] = cvCreateImage(cvSize(captures[i]->getWidth(), captures[i]->getHeight()),
-																		 IPL_DEPTH_8U, 1);
-		threshold_eyes[i] = cvCreateImage(cvSize(captures[i]->getWidth(), captures[i]->getHeight()),
-						    										  IPL_DEPTH_8U, 1);
+		
+		original_eyes[i] = cvCreateImage(cvSize(regions[i].width, regions[i].height),
+									    							 IPL_DEPTH_8U, 3);
+		modified_eyes[i] = cvCreateImage(cvSize(regions[i].width, regions[i].height),
+									    							 IPL_DEPTH_8U, 1);
+	  threshold_eyes[i] = cvCreateImage(cvSize(regions[i].width, regions[i].height),
+						 			    							  IPL_DEPTH_8U, 1);
 	}
 
 	// Set up the config GUI
 	char* config_name = "EyeTracker Configuration";
 	cvNamedWindow(config_name, 0);
+	
+	ConfigTrackbar* pupil_thresholds[NUM_INPUTS];
+	ConfigTrackbar* eyebrow_thresholds[NUM_INPUTS];
 
-	ConfigTrackbar* pupil_threshold = new ConfigTrackbar(
-		"P Thresh", config_name, 80, 0, 255, 255);
+	for (i=0; i<NUM_INPUTS; i++)
+	{
+		char pupil_name[MAX_STRING];
+		sprintf_s(pupil_name, MAX_STRING, "P Thresh %d", i);
+		pupil_thresholds[i] = new ConfigTrackbar(
+			pupil_name, config_name, 80, 0, 255, 255);
 
-	ConfigTrackbar* canny_high = new ConfigTrackbar(
-		"Canny Hi", config_name, 250, 0, 500, 500);
-
-	ConfigTrackbar* canny_low = new ConfigTrackbar(
-		"Canny Low", config_name, 200, 0, 500, 500);
-
-	ConfigTrackbar* eyebrow_threshold = new ConfigTrackbar(
-		"EB Thresh", config_name, 100, 0, 255, 255);
-
-	ConfigTrackbar* eye_threshold = new ConfigTrackbar(
-		"E Thresh", config_name, 120, 0, 255, 255);
+		char eyebrow_name[MAX_STRING];
+		sprintf_s(eyebrow_name, MAX_STRING, "EB Thresh %d", i);
+		eyebrow_thresholds[i] = new ConfigTrackbar(
+			eyebrow_name, config_name, 100, 0, 255, 255);
+	}
 
 	Recognizer* recog = new Recognizer();
 
 	Eye* eye_trackers[NUM_INPUTS];
 	Pupil pupils[NUM_INPUTS];
 	CvBox2D eyebrows[NUM_INPUTS];
-	CvRect eyes[NUM_INPUTS];
 	for (i = 0; i < NUM_INPUTS; i++)
 	{
 		eye_trackers[i] = new Eye();
@@ -359,30 +363,38 @@ int main(int argc, char* argv[])
 		eyebrows[i].angle = 0;
 		eyebrows[i].center = cvPoint2D32f(0, 0);
 		eyebrows[i].size = cvSize2D32f(0, 0);
-
-		eyes[i] = cvRect(0, 0, 0, 0);
 	}
 	
+	
+	bool calibrating = true;
+	int calibration_stage = -1;	
+	int calibration_timer = -1;
 	bool send_data = false;
-	char c;
+	printf("Please adjust the sliders at left until the pupil and eyebrow are stably tracked.\n");
+	printf("Press SPACEBAR when you are ready to continue.\n\n");
+	
 	// Quit with Escape
 	while ( (c = cvWaitKey(33)) != 27)
 	{
 		// Start and stop recognition with Spacebar
-		if (c == 32)
+		if (c == 32 && !calibrating)
 			send_data = !send_data;
+		
+		cvResetImageROI(original_img);
+		capture->advance();
+		capture->getCurrentFrame(original_img, CV_CVTIMG_FLIP);
 
 		for (i = 0; i < NUM_INPUTS; i++)
 		{
-			captures[i]->advance();
-			captures[i]->getCurrentFrame(original_eyes[i], FLIP_INPUT);
+			cvSetImageROI(original_img, regions[i]);
+			cvCopy(original_img, original_eyes[i]);
 			cvZero(modified_eyes[i]);
-			cvCvtPixToPlane(original_eyes[i], NULL, NULL, modified_eyes[i], NULL );
+			cvCvtPixToPlane(original_img, NULL, NULL, modified_eyes[i], NULL );
 			cvSmooth(modified_eyes[i], modified_eyes[i], CV_GAUSSIAN, 5, 5);
 
 			// Pupil detection
-			cvThreshold(modified_eyes[i], threshold_eyes[i], pupil_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
-			cvCanny(threshold_eyes[i], threshold_eyes[i], canny_low->getValue(), canny_high->getValue(), 3);
+			cvThreshold(modified_eyes[i], threshold_eyes[i], pupil_thresholds[i]->getValue(), 255, CV_THRESH_BINARY_INV);
+			cvCanny(threshold_eyes[i], threshold_eyes[i], CANNY_LOW, CANNY_HIGH, 3);
 			cvShowImage(pupil_names[i], threshold_eyes[i]);
 			updatePupil(threshold_eyes[i], &pupils[i]);
 			//printf("Found pupil %d: (%d, %d) - %d\n", i, pupils[i].x, pupils[i].y, pupils[i].radius);
@@ -391,11 +403,11 @@ int main(int argc, char* argv[])
 
 
 			// Eyebrow Detection
-			cvThreshold(modified_eyes[i], threshold_eyes[i], eyebrow_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
+			cvThreshold(modified_eyes[i], threshold_eyes[i], eyebrow_thresholds[i]->getValue(), 255, CV_THRESH_BINARY_INV);
 			cvShowImage(eyebrow_names[i], threshold_eyes[i]);
 			updateEyebrow(threshold_eyes[i], &eyebrows[i], &pupils[i]);		
-			if ( (eyebrows[i].center.x >= 0 && eyebrows[i].center.x <= captures[i]->getWidth()) &&
-					 (eyebrows[i].center.y >= 0 && eyebrows[i].center.y <= captures[i]->getHeight()) )
+			if ( (eyebrows[i].center.x >= 0 && eyebrows[i].center.x <= capture->getWidth()) &&
+					 (eyebrows[i].center.y >= 0 && eyebrows[i].center.y <= capture->getHeight()) )
 			{
 				//printf("Found Eyebrow: \n\tPos: %6.2f, %6.2f, \n\tSize: %6.2f, %6.2f, \n\tAngle: %6.2f\n", 
 				//			  eyebrows[i].center.x, eyebrows[i].center.y, 
@@ -410,64 +422,136 @@ int main(int argc, char* argv[])
 			//{
 			//	printf("No eyebrow detected.\n");
 			//}
-			
-
-			// Eye Detection
-			cvThreshold(modified_eyes[i], threshold_eyes[i], eye_threshold->getValue(), 255, CV_THRESH_BINARY_INV);
-			cvShowImage(eye_names[i], threshold_eyes[i]);
-			updateEye(threshold_eyes[i], &eyes[i], &pupils[i], &eyebrows[i]);	
-			if ( (eyes[i].x >= 0 && eyes[i].x <= captures[i]->getWidth()) &&
-					 (eyes[i].y >= 0 && eyes[i].y <= captures[i]->getHeight()) )
-			{
-				//printf("Best Eye: \n\tPos: %6.2f, %6.2f, \n\tSize: %6.2f, %6.2f, \n\tAngle: %6.2f\n", 
-				//			  eyes[i].center.x, eyes[i].center.y, 
-				//			  eyes[i].size.width, eyes[i].size.height,
-				//			  eyes[i].angle);
-				cvDrawRect(original_eyes[i],
-									 cvPoint(eyes[i].x, eyes[i].y), 
-									 cvPoint(eyes[i].x + eyes[i].width, eyes[i].y + eyes[i].height),
-									 CV_RGB(0, 0, 255), 2);
-			}
-			//else
-			//{
-			//	printf("No eye detected.\n");
-			//}
 			cvShowImage(modified_names[i], original_eyes[i]);
 			eye_trackers[i]->noPupilDetected = (pupils[i].radius <= MIN_PUPIL_RADIUS);
 			eye_trackers[i]->pupilPositionX = pupils[i].x;
 			eye_trackers[i]->pupilPositionY = pupils[i].y;
-			eye_trackers[i]->eyeSizeX = eyes[i].width;
-			eye_trackers[i]->eyeSizeY = eyes[i].height;
-			eye_trackers[i]->eyePositionX = eyes[i].x;
-			eye_trackers[i]->eyePositionY = eyes[i].y;
 			eye_trackers[i]->browPositionY = eyebrows[i].center.y;
 		}
 		if (send_data)
 			recog->updateState(*eye_trackers[0], *eye_trackers[1]);
+			
+		if (calibrating)
+		{
+			if (calibration_stage < 0 && c == 32)
+			{
+				calibration_stage++;
+				printf("Without moving your head, please look to the LEFT.\n");
+				printf("Press SPACEBAR and continue to look LEFT for a few moments\n");
+				printf("before looking back at the screen.\n\n");
+			}
+			else if (calibration_stage >= NUM_TO_CALIBRATE)
+			{
+				printf("Thank you for calibrating!\n");
+				printf("********** END OF CALIBRATION ***************\n\n");
+				printf("Please press SPACEBAR to begin recognition\n\n");
+				calibrating = false;
+				calibration_stage = -1;
+				calibration_timer = -1;
+			}
+			else if (c == 32 && calibration_timer < 0)
+			{
+				calibration_timer++;
+			}
+			else if (calibration_timer >= 0)
+			{
+				//recog->addCalibration(*eye_trackers[0], *eye_trackers[1], calibration_stage);
+				calibration_timer++;
+			}
+			
+			if (calibration_timer >= CALIBRATION_FRAMES)
+			{
+				calibration_timer = -1;
+				calibration_stage++;
+				switch(calibration_stage)
+				{
+				case 1:
+				{
+					printf("Without moving your head, please look to the RIGHT.\n");
+					printf("Press SPACEBAR and continue to look RIGHT for a few moments\n");
+					printf("before looking back at the screen.\n\n");
+				}
+				break;
+				case 2:
+				{
+					printf("Without moving your head, please look UP.\n");
+					printf("Press SPACEBAR and continue to look UP for a few moments\n");
+					printf("before looking back at the screen.\n\n");
+				}
+				break;
+				case 3:
+				{
+					printf("Without moving your head, please look DOWN.\n");
+					printf("Press SPACEBAR and continue to look DOWN for a few moments\n");
+					printf("before looking back at the screen.\n\n");
+				}
+				break;
+				case 4:
+				{
+					printf("Without moving your head, please RAISE YOUR EYEBROWS.");
+					printf("Press SPACEBAR and continue RAISING YOUR EYEBROWS for a\n");
+					printf("few moments before returning them to a rest position.\n\n");
+				}
+				break;
+				}
+			}
+		}
 	}
 
 	// Free memory allocated for input captures
 	for (i=0; i<NUM_INPUTS; i++)
 	{
-		cvReleaseImage(&original_eyes[i]);
 		cvReleaseImage(&modified_eyes[i]);
 		cvReleaseImage(&threshold_eyes[i]);
 		cvDestroyWindow(modified_names[i]);
 		cvDestroyWindow(eyebrow_names[i]);
-		cvDestroyWindow(eye_names[i]);
 		cvDestroyWindow(pupil_names[i]);
-		delete captures[i];
 		delete eye_trackers[i];
-		captures[i] = NULL;
+		delete pupil_thresholds[i];
+		delete eyebrow_thresholds[i];
 	}
 	delete recog;
-
-	delete canny_high;
-	delete canny_low;
-	delete pupil_threshold;
-	delete eyebrow_threshold;
-	delete eye_threshold;
+	delete capture;
 	cvDestroyWindow(config_name);
 
 	return 1;
+}
+
+
+
+void calibration_mouse_handler(int event, int x, int y, int flas, void* param)
+{
+	switch(event)
+	{
+	case CV_EVENT_MOUSEMOVE:
+	{
+		if(drawing_box)
+		{
+			box.width = x - box.x;
+			box.height = y - box.y;
+		}
+	}
+	break;
+	case CV_EVENT_LBUTTONDOWN:
+	{
+		drawing_box = true;
+		drawn = false;
+		box = cvRect(x, y, 0, 0);
+	}
+	break;
+	case CV_EVENT_LBUTTONUP:
+	{
+		drawing_box = false;
+		drawn = true;
+		if (box.width < 0) {
+			box.x += box.width;
+			box.width *= -1;
+		}
+		if (box.height < 0) {
+			box.y += box.height;
+			box.height *= -1;
+		}
+	}
+	break;
+	}
 }
