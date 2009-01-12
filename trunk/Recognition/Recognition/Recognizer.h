@@ -10,6 +10,8 @@
 using namespace System;
 using namespace System::Windows::Forms;
 #include "Eye.h"
+
+#include "EyeTracker/config.h"
 //#define MAF_LENGTH = 4 //3 stored, 1 averaged
 //#define MAF_DIVISOR = 6//3+2+1
 
@@ -27,11 +29,25 @@ class Recognizer
 					BLINK_LIMIT = 12
 					};
 
+	//CALIBRATION VARIABLES
+	int calibrationPupilTop;
+	int calibrationPupilBottom;
+	int calibrationPupilLeft;
+	int calibrationPupilRight;
+	int calibrationBrow;
+
+	int calibrationCountPupilTop;
+	int calibrationCountPupilBottom;
+	int calibrationCountPupilLeft;
+	int calibrationCountPupilRight;
+	int calibrationCountBrow;
+
 
 	//moving average filter of the current eye position
 	//array[0] is the current, averaged position
 	//array[1] to array[MAF_LENGTH] stores the previous (MAF_LENGTH-1) values
 	
+	//MAF VARIABLES
 	//left ones
 	int* currentGazePositionLX;
 	int* currentGazePositionLY;
@@ -52,6 +68,8 @@ class Recognizer
 	int* browPositionL;
 	int* browPositionR;
 
+
+	//STATE VARIABLES
 	int currentLeftEyeAction;
 	int currentLeftEyeActionCount;
 	int currentRightEyeAction;
@@ -67,6 +85,9 @@ class Recognizer
 	int calculateCurrentLeftEyePosition();
 	int calculateCurrentRightEyePosition();
 	void output(int currentEyeAction);//send the key for a specific action
+	
+	void updateCalibration(Eye sourceEye, int calibrationType);
+	
 	//the constructor
 	Recognizer();
 	~Recognizer();
