@@ -96,7 +96,7 @@ class Recognizer
 	int calculateCurrentLeftEyePosition();
 	int calculateCurrentRightEyePosition();
 	void output(int currentEyeAction);//send the key for a specific action
-	
+	void printInfo();
 	void updateLeftCalibration(Eye sourceEye, int calibrationType);
 	void updateRightCalibration(Eye sourceEye, int calibrationType);
 	
