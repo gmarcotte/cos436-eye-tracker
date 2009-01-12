@@ -292,7 +292,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		int oldGazePositionRY = currentGazePositionRY[0];
 		//then update the gaze position
 		updateCurrentLeftEyePosition(newEyeLeft);
-		updateCurrentRightEyePosition(newEyeLeft);
+		updateCurrentRightEyePosition(newEyeRight);
 		
 		newStateL = calculateCurrentLeftEyePosition();
 		newStateR = calculateCurrentRightEyePosition();
@@ -332,7 +332,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		{
 			if(currentRightEyeActionCount>ACTION_LIMIT && currentLeftEyeActionCount>ACTION_LIMIT)
 			{
-				printf("Officially sending, the eye just given", newEyeLeft.pupilPositionX, newEyeLeft.pupilRadius);
+				printf("Officially sending, the eye just given %d,%d\n", newEyeLeft.pupilPositionX, newEyeLeft.pupilRadius);
 				output(currentRightEyeAction);
 			}
 		}
@@ -340,6 +340,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 	else if(newEyeLeft.noPupilDetected && !newEyeRight.noPupilDetected)
 	{//left eye is blinking, not right
 		//Get the Position of the Right Eye!
+		updateCurrentRightEyePosition(newEyeRight);
 		newStateR = calculateCurrentRightEyePosition();
 		if(newStateR == currentRightEyeAction)
 		{
@@ -371,6 +372,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 	else if(newEyeRight.noPupilDetected && !newEyeLeft.noPupilDetected)
 	{//right eye is blinking, not left
 		//get the position of the left eye!
+		updateCurrentRightEyePosition(newEyeLeft);
 		newStateL = calculateCurrentLeftEyePosition();
 		if(newStateL == currentLeftEyeAction)
 		{
@@ -535,6 +537,10 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 }
 void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType)
 {
+	if(sourceEye.noPupilDetected)
+		return;
+	
+	printf("Calibration data: type is %d, with pupilPosition %d,%d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY);
 	switch(calibrationType)
 	{
 		case EYE_LEFT:
