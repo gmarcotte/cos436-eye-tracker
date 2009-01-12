@@ -303,7 +303,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			{//send the appropriate key
 				printf("neither is blinking, left is sending a %d,\n", currentLeftEyeAction);
 				//output(currentLeftEyeAction);
-				currentLeftEyeActionCount = 0;
+			//	currentLeftEyeActionCount = 0;
 			}
 		}
 		else
@@ -319,7 +319,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			{//send the appropriate key
 				printf("neither is blinking, right is sending a %d,\n", currentRightEyeAction);
 				//output(currentRightEyeAction);
-				currentRightEyeActionCount = 0;
+				//currentRightEyeActionCount = 0;
 			}
 		}
 		else
@@ -330,7 +330,11 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 
 		if(currentRightEyeAction == currentLeftEyeAction)
 		{
-			output(currentRightEyeAction);
+			if(currentRightEyeActionCount>ACTION_LIMIT && currentLeftEyeActionCount>ACTION_LIMIT)
+			{
+				printf("Officially sending, the eye just given", newEyeLeft.pupilPositionX, newEyeLeft.pupilRadius);
+				output(currentRightEyeAction);
+			}
 		}
 	}
 	else if(newEyeLeft.noPupilDetected && !newEyeRight.noPupilDetected)
@@ -452,7 +456,8 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 
 void Recognizer::printInfo()
 {
-	printf("pupilLeft:%d, pupilRight:%d\n", calibrationPupilLeftL, calibrationPupilRightL); 
+	printf("LpupilLeft:%d, pupilRight:%d\n", calibrationPupilLeftL, calibrationPupilRightL); 
+	printf("RpupilLeft:%d, pupilRight:%d\n", calibrationPupilLeftR, calibrationPupilRightR); 
 	printf("currentPosRad:%d,%d\n", currentGazePositionLX[0], currentPupilRadiusL[0]);
 	printf("lastPosRad:%d,%d\n", currentGazePositionLX[1], currentPupilRadiusL[1]);
 }
