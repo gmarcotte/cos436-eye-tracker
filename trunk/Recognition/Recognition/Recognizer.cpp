@@ -1,5 +1,5 @@
 
-
+#include <stdio.h>
 #include "Recognizer.h"
 
 Recognizer::Recognizer()
@@ -328,6 +328,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		if(blinkFrameCountLeft>=BLINK_LIMIT)
 		{
 			currentLeftEyeAction = LEFT_CLOSED;
+			printf("Printing e\n");
 			System::Windows::Forms::SendKeys::SendWait("e");
 			blinkFrameCountLeft=0;
 		}
@@ -355,6 +356,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		if(blinkFrameCountRight>=BLINK_LIMIT)
 		{
 			currentRightEyeAction = RIGHT_CLOSED;
+			printf("Sending q\n");
 			System::Windows::Forms::SendKeys::SendWait("q");
 			blinkFrameCountRight=0;
 		}
@@ -368,6 +370,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		{
 			currentRightEyeAction = RIGHT_CLOSED;
 			currentLeftEyeAction = LEFT_CLOSED;
+			printf("Sending r\n");
 			System::Windows::Forms::SendKeys::SendWait("r");
 			blinkFrameCountRight=0;
 			blinkFrameCountLeft=0;
@@ -375,12 +378,14 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		else if(blinkFrameCountRight>=BLINK_LIMIT)
 		{
 			currentRightEyeAction = RIGHT_CLOSED;
+			printf("Sending q\n");
 			System::Windows::Forms::SendKeys::SendWait("q");
 			blinkFrameCountRight=0;
 		}
 		else if(blinkFrameCountLeft>=BLINK_LIMIT)
 		{
 			currentLeftEyeAction = LEFT_CLOSED;
+			printf("Sending e\n");
 			System::Windows::Forms::SendKeys::SendWait("e");
 			blinkFrameCountLeft=0;
 		}
@@ -418,17 +423,29 @@ void Recognizer::output(int currentEyeAction)
 	switch(currentEyeAction)
 	{
 	case Eye::LEFT:
+	{
+		printf("Sending d\n");
 		System::Windows::Forms::SendKeys::SendWait("d");
 		break;
+	}
 	case Eye::RIGHT:
+	{
+		printf("Sending a\n");
 		System::Windows::Forms::SendKeys::SendWait("a");
 		break;
+	}
 	case Eye::UP:
+	{
+		printf("Sending w\n");
 		System::Windows::Forms::SendKeys::SendWait("w");
 		break;
+	}
 	case Eye::DOWN:
+	{
+		printf("Sending s\n");
 		System::Windows::Forms::SendKeys::SendWait("s");
 		break;
+	}
 	}
 }
 

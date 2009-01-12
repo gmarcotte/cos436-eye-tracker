@@ -70,9 +70,12 @@ int CaptureHandler::getPosition() const {return this->position;}
 double CaptureHandler::getFrameRate() const {return (this->framerate) ? this->framerate : DEFAULT_FRAMERATE;}
 
 // Get the current frame as a separately allocated image object.
-void CaptureHandler::getCurrentFrame(IplImage* fr) const
+void CaptureHandler::getCurrentFrame(IplImage* fr, int flip) const
 {
-  cvConvertImage(this->frame, fr);
+	if (flip)
+		cvConvertImage(this->frame, fr, CV_CVTIMG_FLIP);
+	else
+		cvConvertImage(this->frame, fr);
 }
 
 // Update the properties by querying the capture object
