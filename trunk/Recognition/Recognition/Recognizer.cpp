@@ -218,24 +218,24 @@ int Recognizer::calculateCurrentLeftEyePosition()
 		//get the bounds of the pupil
 	int pupilTop = currentGazePositionLY[0] + (int) currentPupilRadiusL[0]/2;
 	int pupilBottom = currentGazePositionLY[0] - (int) currentPupilRadiusL[0]/2;
-	int pupilLeft = currentGazePositionLX[0] - currentPupilRadiusL[0];
-	int pupilRight = currentGazePositionLX[0] + currentPupilRadiusL[0];
+	int pupilLeft = currentGazePositionLX[0] + currentPupilRadiusL[0];
+	int pupilRight = currentGazePositionLX[0] - currentPupilRadiusL[0];
 
-	if(pupilRight>=calibrationPupilRightL)
+	if(pupilRight<=calibrationPupilRightL)
 	{
 		return Eye::LEFT;//the pupil is far right in the image,
 		            //therefore the person is looking left
 	}
-	else if(pupilLeft<=calibrationPupilLeftL)
+	else if(pupilLeft>=calibrationPupilLeftL)
 	{
 		return Eye::RIGHT;//the pupil is far left in the image,
 		            //therefore the person is looking right
 	}
-	else if(pupilBottom>calibrationPupilBottomL)
+	else if(pupilBottom >= calibrationPupilBottomL)
 	{
 		return Eye::UP;
 	}
-	else if(pupilTop<calibrationPupilTopL)
+	else if(pupilTop <= calibrationPupilTopL)
 	{
 		return Eye::DOWN;
 	}
@@ -253,24 +253,24 @@ int Recognizer::calculateCurrentRightEyePosition()
 	//get the bounds of the pupil
 	int pupilTop = currentGazePositionRY[0] + (int) currentPupilRadiusR[0]/2;
 	int pupilBottom = currentGazePositionRY[0] - (int) currentPupilRadiusR[0]/2;
-	int pupilLeft = currentGazePositionRX[0] - currentPupilRadiusR[0];
-	int pupilRight = currentGazePositionRX[0] + currentPupilRadiusR[0];
+	int pupilLeft = currentGazePositionRX[0] + currentPupilRadiusR[0];
+	int pupilRight = currentGazePositionRX[0] - currentPupilRadiusR[0];
 
-	if(pupilRight>=calibrationPupilRightR)
+	if(pupilRight <= calibrationPupilRightR)
 	{
 		return Eye::LEFT;//the pupil is far right in the image,
 		            //therefore the person is looking left
 	}
-	else if(pupilLeft<=calibrationPupilLeftR)
+	else if(pupilLeft >= calibrationPupilLeftR)
 	{
 		return Eye::RIGHT;//the pupil is far left in the image,
 		            //therefore the person is looking right
 	}
-	else if(pupilBottom>calibrationPupilBottomR)
+	else if(pupilBottom >= calibrationPupilBottomR)
 	{
 		return Eye::UP;
 	}
-	else if(pupilTop<calibrationPupilTopR)
+	else if(pupilTop <= calibrationPupilTopR)
 	{
 		return Eye::DOWN;
 	}
@@ -452,7 +452,7 @@ void Recognizer::output(int currentEyeAction)
 	case Eye::LEFT:
 	{
 		printf("Sending d\n");
-		printf("pupilLeft:%d, currentPosRad:%d,%d", calibrationPupilLeftL,currentGazePositionLX[0], currentPupilRadiusL); 
+		printf("pupilLeft:%d, currentPosRad:%d,%d", calibrationPupilLeftL,currentGazePositionLX[0], currentPupilRadiusL[0]); 
 		System::Windows::Forms::SendKeys::SendWait("d");
 		break;
 	}
