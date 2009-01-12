@@ -12,16 +12,27 @@ Recognizer::Recognizer()
 	currentBrowAction = Recognizer::RAISED;
 
 		//CALIBRATION VARIABLES
-	calibrationPupilTop=0;
-	calibrationPupilBottom=0;
-	calibrationPupilLeft=0;
-	calibrationPupilRight=0;
-	calibrationBrow=0;
-	calibrationCountPupilTop=0;
-	calibrationCountPupilBottom=0;
-	calibrationCountPupilLeft=0;
-	calibrationCountPupilRight=0;
-	calibrationCountBrow=0;
+	calibrationPupilTopL=0;
+	calibrationPupilBottomL=0;
+	calibrationPupilLeftL=0;
+	calibrationPupilRightL=0;
+	calibrationBrowL=0;
+	calibrationCountPupilTopL=0;
+	calibrationCountPupilBottomL=0;
+	calibrationCountPupilLeftL=0;
+	calibrationCountPupilRightL=0;
+	calibrationCountBrowL=0;
+		//CALIBRATION VARIABLES
+	calibrationPupilTopR=0;
+	calibrationPupilBottomR=0;
+	calibrationPupilLeftR=0;
+	calibrationPupilRightR=0;
+	calibrationBrowR=0;
+	calibrationCountPupilTopR=0;
+	calibrationCountPupilBottomR=0;
+	calibrationCountPupilLeftR=0;
+	calibrationCountPupilRightR=0;
+	calibrationCountBrowR=0;
 
 	//Left Eye
 	currentGazePositionLX = (int*) malloc(sizeof(int) * MAF_LENGTH);
@@ -210,21 +221,21 @@ int Recognizer::calculateCurrentLeftEyePosition()
 	int pupilLeft = currentGazePositionLX[0] - currentPupilRadiusL[0];
 	int pupilRight = currentGazePositionLX[0] + currentPupilRadiusL[0];
 
-	if(pupilRight>=calibrationPupilRight)
+	if(pupilRight>=calibrationPupilRightL)
 	{
 		return Eye::LEFT;//the pupil is far right in the image,
 		            //therefore the person is looking left
 	}
-	else if(pupilLeft<=calibrationPupilLeft)
+	else if(pupilLeft<=calibrationPupilLeftL)
 	{
 		return Eye::RIGHT;//the pupil is far left in the image,
 		            //therefore the person is looking right
 	}
-	else if(pupilBottom>calibrationPupilBottom)
+	else if(pupilBottom>calibrationPupilBottomL)
 	{
 		return Eye::UP;
 	}
-	else if(pupilTop<calibrationPupilTop)
+	else if(pupilTop<calibrationPupilTopL)
 	{
 		return Eye::DOWN;
 	}
@@ -245,21 +256,21 @@ int Recognizer::calculateCurrentRightEyePosition()
 	int pupilLeft = currentGazePositionRX[0] - currentPupilRadiusR[0];
 	int pupilRight = currentGazePositionRX[0] + currentPupilRadiusR[0];
 
-	if(pupilRight>=calibrationPupilRight)
+	if(pupilRight>=calibrationPupilRightR)
 	{
 		return Eye::LEFT;//the pupil is far right in the image,
 		            //therefore the person is looking left
 	}
-	else if(pupilLeft<=calibrationPupilLeft)
+	else if(pupilLeft<=calibrationPupilLeftR)
 	{
 		return Eye::RIGHT;//the pupil is far left in the image,
 		            //therefore the person is looking right
 	}
-	else if(pupilBottom>calibrationPupilBottom)
+	else if(pupilBottom>calibrationPupilBottomR)
 	{
 		return Eye::UP;
 	}
-	else if(pupilTop<calibrationPupilTop)
+	else if(pupilTop<calibrationPupilTopR)
 	{
 		return Eye::DOWN;
 	}
@@ -465,25 +476,25 @@ int newAvg(int oldAvg, int oldCount, int newAdd)
 {
 	return (oldCount*oldAvg + newAdd ) / ( oldCount+1);
 }
-void Recognizer::updateCalibration(Eye sourceEye, int calibrationType)
+void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 {
 	switch(calibrationType)
 	{
 		case EYE_LEFT:
-			calibrationPupilLeft = newAvg(calibrationPupilLeft, calibrationCountPupilLeft,  sourceEye.eyePositionX);
-			calibrationCountPupilLeft++;
+			calibrationPupilLeftL = newAvg(calibrationPupilLeftL, calibrationCountPupilLeftL,  sourceEye.eyePositionX);
+			calibrationCountPupilLeftL++;
 			break;
 		case EYE_RIGHT:
-			calibrationPupilRight = newAvg(calibrationPupilRight, calibrationCountPupilRight,  sourceEye.eyePositionX);
-			calibrationCountPupilRight++;
+			calibrationPupilRightL = newAvg(calibrationPupilRightL, calibrationCountPupilRightL,  sourceEye.eyePositionX);
+			calibrationCountPupilRightL++;
 			break;
 		case EYE_UP:
-			calibrationPupilTop = newAvg(calibrationPupilTop, calibrationCountPupilTop,  sourceEye.eyePositionY);
-			calibrationCountPupilTop++;
+			calibrationPupilTopL = newAvg(calibrationPupilTopL, calibrationCountPupilTopL,  sourceEye.eyePositionY);
+			calibrationCountPupilTopL++;
 			break;
 		case EYE_DOWN:
-			calibrationPupilBottom = newAvg(calibrationPupilBottom, calibrationCountPupilBottom,  sourceEye.eyePositionY);
-			calibrationCountPupilBottom++;
+			calibrationPupilBottomL = newAvg(calibrationPupilBottomL, calibrationCountPupilBottomL,  sourceEye.eyePositionY);
+			calibrationCountPupilBottomL++;
 			break;
 		case LEFT_WINK:
 			break;
@@ -492,8 +503,40 @@ void Recognizer::updateCalibration(Eye sourceEye, int calibrationType)
 		case BLINK:
 			break;
 		case EYEBROW_RAISE:
-			calibrationBrow = newAvg(calibrationBrow, calibrationCountBrow,  sourceEye.browPositionY);
-			calibrationCountBrow++;
+			calibrationBrowL = newAvg(calibrationBrowL, calibrationCountBrowL,  sourceEye.browPositionY);
+			calibrationCountBrowL++;
+			break;
+	}
+}
+void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType)
+{
+	switch(calibrationType)
+	{
+		case EYE_LEFT:
+			calibrationPupilLeftR = newAvg(calibrationPupilLeftR, calibrationCountPupilLeftR,  sourceEye.eyePositionX);
+			calibrationCountPupilLeftR++;
+			break;
+		case EYE_RIGHT:
+			calibrationPupilRightR = newAvg(calibrationPupilRightR, calibrationCountPupilRightR,  sourceEye.eyePositionX);
+			calibrationCountPupilRightR++;
+			break;
+		case EYE_UP:
+			calibrationPupilTopR = newAvg(calibrationPupilTopR, calibrationCountPupilTopR,  sourceEye.eyePositionY);
+			calibrationCountPupilTopR++;
+			break;
+		case EYE_DOWN:
+			calibrationPupilBottomR = newAvg(calibrationPupilBottomR, calibrationCountPupilBottomR,  sourceEye.eyePositionY);
+			calibrationCountPupilBottomR++;
+			break;
+		case LEFT_WINK:
+			break;
+		case RIGHT_WINK:
+			break;
+		case BLINK:
+			break;
+		case EYEBROW_RAISE:
+			calibrationBrowR = newAvg(calibrationBrowR, calibrationCountBrowR,  sourceEye.browPositionY);
+			calibrationCountBrowR++;
 			break;
 	}
 }

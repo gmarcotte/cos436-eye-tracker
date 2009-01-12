@@ -30,19 +30,30 @@ class Recognizer
 					};
 
 	//CALIBRATION VARIABLES
-	int calibrationPupilTop;
-	int calibrationPupilBottom;
-	int calibrationPupilLeft;
-	int calibrationPupilRight;
-	int calibrationBrow;
+	int calibrationPupilTopL;
+	int calibrationPupilBottomL;
+	int calibrationPupilLeftL;
+	int calibrationPupilRightL;
+	int calibrationBrowL;
 
-	int calibrationCountPupilTop;
-	int calibrationCountPupilBottom;
-	int calibrationCountPupilLeft;
-	int calibrationCountPupilRight;
-	int calibrationCountBrow;
+	int calibrationCountPupilTopL;
+	int calibrationCountPupilBottomL;
+	int calibrationCountPupilLeftL;
+	int calibrationCountPupilRightL;
+	int calibrationCountBrowL;
 
+	//CALIBRATION VARIABLES
+	int calibrationPupilTopR;
+	int calibrationPupilBottomR;
+	int calibrationPupilLeftR;
+	int calibrationPupilRightR;
+	int calibrationBrowR;
 
+	int calibrationCountPupilTopR;
+	int calibrationCountPupilBottomR;
+	int calibrationCountPupilLeftR;
+	int calibrationCountPupilRightR;
+	int calibrationCountBrowR;
 	//moving average filter of the current eye position
 	//array[0] is the current, averaged position
 	//array[1] to array[MAF_LENGTH] stores the previous (MAF_LENGTH-1) values
@@ -86,7 +97,8 @@ class Recognizer
 	int calculateCurrentRightEyePosition();
 	void output(int currentEyeAction);//send the key for a specific action
 	
-	void updateCalibration(Eye sourceEye, int calibrationType);
+	void updateLeftCalibration(Eye sourceEye, int calibrationType);
+	void updateRightCalibration(Eye sourceEye, int calibrationType);
 	
 	//the constructor
 	Recognizer();
