@@ -424,11 +424,11 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 	}
 	browPositionL[0] = newEyeLeft.browPositionY;
 	browPositionR[0] = newEyeRight.browPositionY;
-	if(browPositionL[0] < (browPositionL[MAF_LENGTH-1] - (int) 1.5*newEyeLeft.browHeight))
+	if( (browPositionL[0] + (int) .5*newEyeLeft.browHeight) < calibrationBrowL)
 	{
 		leftIsRaised = true;
 	}
-	if(browPositionR[0] < (browPositionR[MAF_LENGTH-1] - (int) 1.5*newEyeRight.browHeight))
+	if( (browPositionR[0] + (int) .5*newEyeRight.browHeight) < calibrationBrowL)
 	{
 		rightIsRaised = true;
 	}
