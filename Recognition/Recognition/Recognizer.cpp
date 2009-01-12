@@ -336,7 +336,6 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 				output(currentRightEyeAction);
 				currentRightEyeActionCount = 0;
 				currentLeftEyeActionCount = 0;
-
 			}
 		}
 	}
@@ -511,7 +510,7 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 		return;
 	}
 
-	printf("Calibration data: type is %d, with pupilPosition %d,%d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY);
+	printf("Calibration data: type is %d, with pupilPosition %d,%d and radius %d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY, sourceEye.pupilRadius);
 	switch(calibrationType)
 	{
 		case EYE_LEFT:
@@ -550,7 +549,7 @@ void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType)
 		return;
 	}
 	
-	printf("Calibration data: type is %d, with pupilPosition %d,%d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY);
+	printf("Calibration data: type is %d, with pupilPosition %d,%d and radius %d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY, sourceEye.pupilRadius);
 	switch(calibrationType)
 	{
 		case EYE_LEFT:
