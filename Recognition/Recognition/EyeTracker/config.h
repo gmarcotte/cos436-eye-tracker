@@ -10,21 +10,23 @@ enum {
 	MIN_EB_PERIM			= 100,
 	CANNY_LOW					= 200,
 	CANNY_HIGH				= 250,
+	CALIBRATION_FRAMES = 10,
+	NUM_TO_CALIBRATE  = 5,
 };
 
 
 // Available actions
 enum {
-	EYE_LEFT,
+	EYE_LEFT = 0,
 	EYE_RIGHT,
 	EYE_UP,
 	EYE_DOWN,
+	EYEBROW_RAISE,
 	LEFT_WINK,
 	RIGHT_WINK,
 	BLINK,
-	EYEBROW_RAISE,
 	NUM_ACTIONS
-}
+};
 
 
 
