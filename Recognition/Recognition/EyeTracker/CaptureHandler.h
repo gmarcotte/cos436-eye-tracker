@@ -29,7 +29,7 @@ public:
   int getPosition() const;
 
   // More complex accessors
-  void getCurrentFrame(IplImage*) const;
+  void getCurrentFrame(IplImage*, int) const;
   void refreshProperties();
 
   // Methods for printing state information
