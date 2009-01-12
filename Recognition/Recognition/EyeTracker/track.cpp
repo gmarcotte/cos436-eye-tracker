@@ -272,6 +272,7 @@ int main(int argc, char* argv[])
 	{
 		capture->advance();
 		capture->getCurrentFrame(original_img, CV_CVTIMG_FLIP);
+		cvFlip(original_img, 0, 1);
 		cvShowImage(original_name, original_img);
 	}
 
@@ -339,12 +340,12 @@ int main(int argc, char* argv[])
 		char pupil_name[MAX_STRING];
 		sprintf_s(pupil_name, MAX_STRING, "P Thresh %d", i);
 		pupil_thresholds[i] = new ConfigTrackbar(
-			pupil_name, config_name, 80, 0, 255, 255);
+			pupil_name, config_name, 20, 0, 255, 255);
 
 		char eyebrow_name[MAX_STRING];
 		sprintf_s(eyebrow_name, MAX_STRING, "EB Thresh %d", i);
 		eyebrow_thresholds[i] = new ConfigTrackbar(
-			eyebrow_name, config_name, 100, 0, 255, 255);
+			eyebrow_name, config_name, 85, 0, 255, 255);
 	}
 
 	Recognizer* recog = new Recognizer();
@@ -383,6 +384,7 @@ int main(int argc, char* argv[])
 		cvResetImageROI(original_img);
 		capture->advance();
 		capture->getCurrentFrame(original_img, CV_CVTIMG_FLIP);
+		cvFlip(original_img, 0, 1);
 
 		for (i = 0; i < NUM_INPUTS; i++)
 		{
@@ -398,7 +400,7 @@ int main(int argc, char* argv[])
 			cvShowImage(pupil_names[i], threshold_eyes[i]);
 			updatePupil(threshold_eyes[i], &pupils[i]);
 			//printf("Found pupil %d: (%d, %d) - %d\n", i, pupils[i].x, pupils[i].y, pupils[i].radius);
-			if (pupils[i].radius > 0)
+			if (pupils[i].radius > MIN_PUPIL_RADIUS)
 				cvDrawCircle(original_eyes[i], cvPoint(pupils[i].x, pupils[i].y), pupils[i].radius, CV_RGB(255, 0, 0), 2);
 
 
@@ -426,7 +428,9 @@ int main(int argc, char* argv[])
 			eye_trackers[i]->noPupilDetected = (pupils[i].radius <= MIN_PUPIL_RADIUS);
 			eye_trackers[i]->pupilPositionX = pupils[i].x;
 			eye_trackers[i]->pupilPositionY = pupils[i].y;
+			eye_trackers[i]->pupilRadius = pupils[i].radius;
 			eye_trackers[i]->browPositionY = eyebrows[i].center.y;
+			eye_trackers[i]->browHeight = min(eyebrows[i].size.height, eyebrows[i].size.width);
 		}
 		if (send_data)
 			recog->updateState(*eye_trackers[0], *eye_trackers[1]);
@@ -455,7 +459,8 @@ int main(int argc, char* argv[])
 			}
 			else if (calibration_timer >= 0)
 			{
-				//recog->addCalibration(*eye_trackers[0], *eye_trackers[1], calibration_stage);
+				recog->updateLeftCalibration(*eye_trackers[0], calibration_stage);
+				recog->updateRightCalibration(*eye_trackers[1], calibration_stage);
 				calibration_timer++;
 			}
 			
