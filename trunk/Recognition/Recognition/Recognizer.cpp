@@ -450,7 +450,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 	return currentLeftEyeAction;
 }
 
-void printinfo()
+void Recognizer::printInfo()
 {
 	printf("pupilLeft:%d, pupilRight:%d\n", calibrationPupilLeftL, calibrationPupilRightL); 
 	printf("currentPosRad:%d,%d\n", currentGazePositionLX[0], currentPupilRadiusL[0]);
@@ -463,13 +463,14 @@ void Recognizer::output(int currentEyeAction)
 	case Eye::LEFT:
 	{
 		printf("Sending d\n");
+		printInfo();
 		System::Windows::Forms::SendKeys::SendWait("d");
 		break;
 	}
 	case Eye::RIGHT:
 	{
 		printf("Sending a\n");
-		printinfo();
+		printInfo();
 		System::Windows::Forms::SendKeys::SendWait("a");
 		break;
 	}
