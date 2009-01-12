@@ -500,6 +500,9 @@ int newAvg(int oldAvg, int oldCount, int newAdd)
 }
 void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 {
+	if(sourceEye.noPupilDetected)
+		return;
+
 	switch(calibrationType)
 	{
 		case EYE_LEFT:
