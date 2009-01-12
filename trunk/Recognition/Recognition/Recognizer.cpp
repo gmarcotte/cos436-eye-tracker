@@ -334,6 +334,9 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			{
 				printf("Officially sending, the eye just given %d,%d\n", newEyeLeft.pupilPositionX, newEyeLeft.pupilRadius);
 				output(currentRightEyeAction);
+				currentRightEyeActionCount = 0;
+				currentLeftEyeActionCount = 0;
+
 			}
 		}
 	}
