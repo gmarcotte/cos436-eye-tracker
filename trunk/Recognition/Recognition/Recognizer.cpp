@@ -503,7 +503,10 @@ int newAvg(int oldAvg, int oldCount, int newAdd)
 void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 {
 	if(sourceEye.noPupilDetected)
+	{
+		printf("Garbage Calibration - no pupil detected");
 		return;
+	}
 
 	printf("Calibration data: type is %d, with pupilPosition %d,%d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY);
 	switch(calibrationType)
@@ -539,7 +542,10 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType)
 {
 	if(sourceEye.noPupilDetected)
+	{
+		printf("Garbage Calibration - no pupil detected");
 		return;
+	}
 	
 	printf("Calibration data: type is %d, with pupilPosition %d,%d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY);
 	switch(calibrationType)
