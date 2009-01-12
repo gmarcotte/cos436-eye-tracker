@@ -514,19 +514,19 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 	switch(calibrationType)
 	{
 		case EYE_LEFT:
-			calibrationPupilLeftL = newAvg(calibrationPupilLeftL, calibrationCountPupilLeftL,  sourceEye.eyePositionX);
+			calibrationPupilLeftL = newAvg(calibrationPupilLeftL, calibrationCountPupilLeftL,  sourceEye.pupilPositionX);
 			calibrationCountPupilLeftL++;
 			break;
 		case EYE_RIGHT:
-			calibrationPupilRightL = newAvg(calibrationPupilRightL, calibrationCountPupilRightL,  sourceEye.eyePositionX);
+			calibrationPupilRightL = newAvg(calibrationPupilRightL, calibrationCountPupilRightL,  sourceEye.pupilPositionX);
 			calibrationCountPupilRightL++;
 			break;
 		case EYE_UP:
-			calibrationPupilTopL = newAvg(calibrationPupilTopL, calibrationCountPupilTopL,  sourceEye.eyePositionY);
+			calibrationPupilTopL = newAvg(calibrationPupilTopL, calibrationCountPupilTopL,  sourceEye.pupilPositionY);
 			calibrationCountPupilTopL++;
 			break;
 		case EYE_DOWN:
-			calibrationPupilBottomL = newAvg(calibrationPupilBottomL, calibrationCountPupilBottomL,  sourceEye.eyePositionY);
+			calibrationPupilBottomL = newAvg(calibrationPupilBottomL, calibrationCountPupilBottomL,  sourceEye.pupilPositionY);
 			calibrationCountPupilBottomL++;
 			break;
 		case LEFT_WINK:
@@ -553,19 +553,20 @@ void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType)
 	switch(calibrationType)
 	{
 		case EYE_LEFT:
-			calibrationPupilLeftR = newAvg(calibrationPupilLeftR, calibrationCountPupilLeftR,  sourceEye.eyePositionX);
+			printf("saving Left eye data");
+			calibrationPupilLeftR = newAvg(calibrationPupilLeftR, calibrationCountPupilLeftR,  sourceEye.pupilPositionX);
 			calibrationCountPupilLeftR++;
 			break;
 		case EYE_RIGHT:
-			calibrationPupilRightR = newAvg(calibrationPupilRightR, calibrationCountPupilRightR,  sourceEye.eyePositionX);
+			calibrationPupilRightR = newAvg(calibrationPupilRightR, calibrationCountPupilRightR,  sourceEye.pupilPositionX);
 			calibrationCountPupilRightR++;
 			break;
 		case EYE_UP:
-			calibrationPupilTopR = newAvg(calibrationPupilTopR, calibrationCountPupilTopR,  sourceEye.eyePositionY);
+			calibrationPupilTopR = newAvg(calibrationPupilTopR, calibrationCountPupilTopR,  sourceEye.pupilPositionY);
 			calibrationCountPupilTopR++;
 			break;
 		case EYE_DOWN:
-			calibrationPupilBottomR = newAvg(calibrationPupilBottomR, calibrationCountPupilBottomR,  sourceEye.eyePositionY);
+			calibrationPupilBottomR = newAvg(calibrationPupilBottomR, calibrationCountPupilBottomR,  sourceEye.pupilPositionY);
 			calibrationCountPupilBottomR++;
 			break;
 		case LEFT_WINK:
