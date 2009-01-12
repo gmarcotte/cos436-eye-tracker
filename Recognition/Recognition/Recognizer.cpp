@@ -506,7 +506,7 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 {
 	if(sourceEye.noPupilDetected)
 	{
-		printf("Garbage Calibration - no pupil detected");
+		printf("Garbage Calibration - no pupil detected\n");
 		return;
 	}
 
