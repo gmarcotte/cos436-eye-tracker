@@ -15,7 +15,7 @@ ConfigTrackbar::ConfigTrackbar(char* trackbar_name, char* window_name, double st
 	
 	cvCreateTrackbar(trackbar_name, window_name, &(this->position), num_steps, NULL);
 	
-	printf("Setting %s to %6.2f\n", this->trackbar_name, start_value);
+	//printf("Setting %s to %6.2f\n", this->trackbar_name, start_value);
 	if (!this->setValue(start_value))
 		this->setValue(this->min_value);
 }
@@ -34,7 +34,7 @@ int ConfigTrackbar::setValue(double val)
 	this->position = (int)((val - this->min_value) * (this->max_value - this->min_value) / num_steps);
 
 
-	printf("Setting %s to %d\n", this->trackbar_name, this->position);
+	//printf("Setting %s to %d\n", this->trackbar_name, this->position);
 	cvSetTrackbarPos(this->trackbar_name, this->window_name, this->position);
 	return 1;
 }
