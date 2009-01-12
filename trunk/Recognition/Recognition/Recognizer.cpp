@@ -505,6 +505,7 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 	if(sourceEye.noPupilDetected)
 		return;
 
+	printf("Calibration data: type is %d, with pupilPosition %d,%d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY);
 	switch(calibrationType)
 	{
 		case EYE_LEFT:
