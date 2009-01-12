@@ -327,8 +327,18 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			currentRightEyeActionCount = 0;
 			currentRightEyeAction = newStateR;
 		}
-
-		if(currentRightEyeAction == currentLeftEyeAction)
+		
+		//handle it so that pupils tracked towards the inner eye are trusted more
+		if(currentRightEyeAction == RIGHT)
+		{
+			//then this is what the pupil is doing
+			output(currentRightEyeAction);
+		}
+		else if(currentRightEyeAction == LEFT)
+		{
+			output(currentLeftEyeAction);
+		}
+		else if(currentRightEyeAction == currentLeftEyeAction)
 		{
 			if(currentRightEyeActionCount>ACTION_LIMIT && currentLeftEyeActionCount>ACTION_LIMIT)
 			{
@@ -545,7 +555,7 @@ void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType)
 {
 	if(sourceEye.noPupilDetected)
 	{
-		printf("Garbage Calibration - no pupil detected");
+		printf("Garbage Calibration - no pupil detected\n");
 		return;
 	}
 	
