@@ -1,5 +1,6 @@
 /* Configuration settings for the eye tracking application */
-
+#ifndef CONFIG_H
+#define CONFIG_H
 
 // Tracking configurations
 enum {
@@ -30,3 +31,4 @@ enum {
 
 
 
+#endif

@@ -1,5 +1,8 @@
 // A class for wrapping useful functionality of the CvCapture object.
 
+#ifndef CAPTUREHANDLER_CLASS
+#define CAPTUREHANDLER_CLASS
+
 #include <cv.h>
 #include <highgui.h>
 
@@ -53,3 +56,5 @@ public:
   class WindowError {};
 };
 
+
+#endif
