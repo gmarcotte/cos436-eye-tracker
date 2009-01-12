@@ -301,7 +301,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			currentLeftEyeActionCount++;
 			if(currentLeftEyeActionCount>ACTION_LIMIT)
 			{//send the appropriate key
-				printf("neither is blinking, left is sending a %d," currentLeftEyeAction);
+				printf("neither is blinking, left is sending a %d,/n", currentLeftEyeAction);
 				output(currentLeftEyeAction);
 				currentLeftEyeActionCount = 0;
 			}
@@ -317,7 +317,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			currentRightEyeActionCount++;
 			if(currentRightEyeActionCount>ACTION_LIMIT)
 			{//send the appropriate key
-				printf("neither is blinking, right is sending a %d," currentRightEyeAction);
+				printf("neither is blinking, right is sending a %d,/n", currentRightEyeAction);
 				output(currentRightEyeAction);
 				currentRightEyeActionCount = 0;
 			}
@@ -337,7 +337,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			currentRightEyeActionCount++;
 			if(currentRightEyeActionCount>ACTION_LIMIT)
 			{//send the appropriate key
-				printf("left is blinking, right is sending a %d," currentRightEyeAction);
+				printf("left is blinking, right is sending a %d,/n", currentRightEyeAction);
 				output(currentRightEyeAction);
 				currentRightEyeActionCount = 0;
 			}
@@ -368,7 +368,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 			currentLeftEyeActionCount++;
 			if(currentLeftEyeActionCount>ACTION_LIMIT)
 			{//send the appropriate key
-				printf("right is blinking, left is sending a %d," currentLeftEyeAction);
+				printf("right is blinking, left is sending a %d,/n", currentLeftEyeAction);
 				output(currentLeftEyeAction);
 				currentLeftEyeActionCount = 0;
 			}
