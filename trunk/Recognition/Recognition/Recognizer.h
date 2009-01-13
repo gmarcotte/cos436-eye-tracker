@@ -100,6 +100,9 @@ class Recognizer
 	void updateLeftCalibration(Eye sourceEye, int calibrationType);
 	void updateRightCalibration(Eye sourceEye, int calibrationType);
 	
+	void updateLeftCalibration(Eye sourceEye, int calibrationType, bool resetCalibration);
+	void updateRightCalibration(Eye sourceEye, int calibrationType, bool resetCalibration);
+	
 	//the constructor
 	Recognizer();
 	~Recognizer();
