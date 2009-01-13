@@ -332,11 +332,19 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		if(currentRightEyeAction == RIGHT)
 		{
 			//then this is what the pupil is doing
-			output(currentRightEyeAction);
+			if(currentRightEyeActionCount>ACTION_LIMIT)
+			{
+				printf("Officially sending, the eye just given %d,%d\n", newEyeLeft.pupilPositionX, newEyeLeft.pupilRadius);
+				output(currentRightEyeAction);
+			}
 		}
 		else if(currentRightEyeAction == LEFT)
 		{
-			output(currentLeftEyeAction);
+			if(currentLeftEyeActionCount>ACTION_LIMIT)
+			{
+				printf("Officially sending, the eye just given %d,%d\n", newEyeLeft.pupilPositionX, newEyeLeft.pupilRadius);
+				output(currentLeftEyeAction);
+			}
 		}
 		else if(currentRightEyeAction == currentLeftEyeAction)
 		{
@@ -512,7 +520,7 @@ int newAvg(int oldAvg, int oldCount, int newAdd)
 {
 	return (oldCount*oldAvg + newAdd ) / ( oldCount+1);
 }
-void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
+void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType, bool resetCalibration = false)
 {
 	if(sourceEye.noPupilDetected)
 	{
@@ -520,6 +528,31 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 		return;
 	}
 
+	if(resetCalibration)
+	{
+				//CALIBRATION VARIABLES
+	calibrationPupilTopL=0;
+	calibrationPupilBottomL=0;
+	calibrationPupilLeftL=0;
+	calibrationPupilRightL=0;
+	calibrationBrowL=0;
+	calibrationCountPupilTopL=0;
+	calibrationCountPupilBottomL=0;
+	calibrationCountPupilLeftL=0;
+	calibrationCountPupilRightL=0;
+	calibrationCountBrowL=0;
+		//CALIBRATION VARIABLES
+	calibrationPupilTopR=0;
+	calibrationPupilBottomR=0;
+	calibrationPupilLeftR=0;
+	calibrationPupilRightR=0;
+	calibrationBrowR=0;
+	calibrationCountPupilTopR=0;
+	calibrationCountPupilBottomR=0;
+	calibrationCountPupilLeftR=0;
+	calibrationCountPupilRightR=0;
+	calibrationCountBrowR=0;
+	}
 	printf("Calibration data: type is %d, with pupilPosition %d,%d and radius %d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY, sourceEye.pupilRadius);
 	switch(calibrationType)
 	{
@@ -551,7 +584,7 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType)
 			break;
 	}
 }
-void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType)
+void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType, bool resetCalibration = false)
 {
 	if(sourceEye.noPupilDetected)
 	{
@@ -559,6 +592,31 @@ void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType)
 		return;
 	}
 	
+	if(resetCalibration)
+	{
+		//CALIBRATION VARIABLES
+		calibrationPupilTopL=0;
+		calibrationPupilBottomL=0;
+		calibrationPupilLeftL=0;
+		calibrationPupilRightL=0;
+		calibrationBrowL=0;
+		calibrationCountPupilTopL=0;
+		calibrationCountPupilBottomL=0;
+		calibrationCountPupilLeftL=0;
+		calibrationCountPupilRightL=0;
+		calibrationCountBrowL=0;
+			//CALIBRATION VARIABLES
+		calibrationPupilTopR=0;
+		calibrationPupilBottomR=0;
+		calibrationPupilLeftR=0;
+		calibrationPupilRightR=0;
+		calibrationBrowR=0;
+		calibrationCountPupilTopR=0;
+		calibrationCountPupilBottomR=0;
+		calibrationCountPupilLeftR=0;
+		calibrationCountPupilRightR=0;
+		calibrationCountBrowR=0;
+	}
 	printf("Calibration data: type is %d, with pupilPosition %d,%d and radius %d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY, sourceEye.pupilRadius);
 	switch(calibrationType)
 	{
