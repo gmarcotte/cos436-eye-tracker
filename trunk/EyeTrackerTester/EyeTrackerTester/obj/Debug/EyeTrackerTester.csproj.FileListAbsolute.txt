@@ -1,0 +1,16 @@
+C:\Documents and Settings\Willie Hu\My Documents\Visual Studio 2008\Projects\EyeTrackerTester\EyeTrackerTester\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\Willie Hu\My Documents\Visual Studio 2008\Projects\EyeTrackerTester\EyeTrackerTester\obj\Debug\EyeTrackerTester.Form1.resources
+C:\Documents and Settings\Willie Hu\My Documents\Visual Studio 2008\Projects\EyeTrackerTester\EyeTrackerTester\obj\Debug\EyeTrackerTester.Properties.Resources.resources
+C:\Documents and Settings\Willie Hu\My Documents\Visual Studio 2008\Projects\EyeTrackerTester\EyeTrackerTester\obj\Debug\EyeTrackerTester.csproj.GenerateResource.Cache
+C:\Documents and Settings\Willie Hu\My Documents\Visual Studio 2008\Projects\EyeTrackerTester\EyeTrackerTester\bin\Debug\EyeTrackerTester.exe
+C:\Documents and Settings\Willie Hu\My Documents\Visual Studio 2008\Projects\EyeTrackerTester\EyeTrackerTester\bin\Debug\EyeTrackerTester.pdb
+C:\Documents and Settings\Willie Hu\My Documents\Visual Studio 2008\Projects\EyeTrackerTester\EyeTrackerTester\obj\Debug\EyeTrackerTester.exe
+C:\Documents and Settings\Willie Hu\My Documents\Visual Studio 2008\Projects\EyeTrackerTester\EyeTrackerTester\obj\Debug\EyeTrackerTester.pdb
+F:\Documents\cos436-eye-tracker\EyeTrackerTester\EyeTrackerTester\obj\Debug\EyeTrackerTester.exe
+F:\Documents\cos436-eye-tracker\EyeTrackerTester\EyeTrackerTester\obj\Debug\EyeTrackerTester.pdb
+F:\Documents\cos436-eye-tracker\EyeTrackerTester\EyeTrackerTester\bin\Debug\EyeTrackerTester.exe
+F:\Documents\cos436-eye-tracker\EyeTrackerTester\EyeTrackerTester\bin\Debug\EyeTrackerTester.pdb
+F:\Documents\cos436-eye-tracker\EyeTrackerTester\EyeTrackerTester\obj\Debug\ResolveAssemblyReference.cache
+F:\Documents\cos436-eye-tracker\EyeTrackerTester\EyeTrackerTester\obj\Debug\EyeTrackerTester.Form1.resources
+F:\Documents\cos436-eye-tracker\EyeTrackerTester\EyeTrackerTester\obj\Debug\EyeTrackerTester.Properties.Resources.resources
+F:\Documents\cos436-eye-tracker\EyeTrackerTester\EyeTrackerTester\obj\Debug\EyeTrackerTester.csproj.GenerateResource.Cache
