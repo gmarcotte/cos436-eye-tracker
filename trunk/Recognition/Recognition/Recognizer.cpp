@@ -522,12 +522,6 @@ int newAvg(int oldAvg, int oldCount, int newAdd)
 }
 void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType, bool resetCalibration = false)
 {
-	if(sourceEye.noPupilDetected)
-	{
-		printf("Garbage Calibration - no pupil detected\n");
-		return;
-	}
-
 	if(resetCalibration)
 	{
 				//CALIBRATION VARIABLES
@@ -553,6 +547,13 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType, bool 
 	calibrationCountPupilRightR=0;
 	calibrationCountBrowR=0;
 	}
+	if(sourceEye.noPupilDetected)
+	{
+		printf("Garbage Calibration - no pupil detected\n");
+		return;
+	}
+
+	
 	printf("Calibration data: type is %d, with pupilPosition %d,%d and radius %d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY, sourceEye.pupilRadius);
 	switch(calibrationType)
 	{
@@ -586,13 +587,7 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType, bool 
 }
 void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType, bool resetCalibration = false)
 {
-	if(sourceEye.noPupilDetected)
-	{
-		printf("Garbage Calibration - no pupil detected\n");
-		return;
-	}
-	
-	if(resetCalibration)
+		if(resetCalibration)
 	{
 		//CALIBRATION VARIABLES
 		calibrationPupilTopL=0;
@@ -617,6 +612,14 @@ void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType, bool
 		calibrationCountPupilRightR=0;
 		calibrationCountBrowR=0;
 	}
+
+	if(sourceEye.noPupilDetected)
+	{
+		printf("Garbage Calibration - no pupil detected\n");
+		return;
+	}
+	
+
 	printf("Calibration data: type is %d, with pupilPosition %d,%d and radius %d\n", calibrationType, sourceEye.pupilPositionX, sourceEye.pupilPositionY, sourceEye.pupilRadius);
 	switch(calibrationType)
 	{
