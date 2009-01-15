@@ -268,13 +268,16 @@ int main(int argc, char* argv[])
 	printf("\n\n******** ENTERING CALIBRATION **************\n\n");
 	printf("Please position the camera so that both eye regions (including eyebrows and forehead) are clearly visible.\n");
 	printf("Press SPACEBAR to continue...\n");
-	while( (c = cvWaitKey(33)) != 32)
+  long numFrames = 0;
+	while( (c = cvWaitKey(1)) != 32)
 	{
+    numFrames++;
 		capture->advance();
 		capture->getCurrentFrame(original_img, CV_CVTIMG_FLIP);
 		cvFlip(original_img, 0, 1);
 		cvShowImage(original_name, original_img);
 	}
+  printf("Watched for %d frames.\n", numFrames);
 
 	IplImage* shown_img = cvCloneImage(original_img);
 	CvRect regions[NUM_INPUTS];
@@ -375,11 +378,24 @@ int main(int argc, char* argv[])
 	printf("Press SPACEBAR when you are ready to continue.\n\n");
 	
 	// Quit with Escape
+  long frameCount = 0;
 	while ( (c = cvWaitKey(33)) != 27)
 	{
+    frameCount++;
 		// Start and stop recognition with Spacebar
 		if (c == 32 && !calibrating)
 			send_data = !send_data;
+
+    if (c == 'c')
+    {
+      printf("\n\n****** Entering Recalibration ****\n\n");
+      printf("Please press SPACEBAR to continue with calibration.\n");
+      send_data = false;
+      calibrating = true;
+      Eye e;
+      recog->updateLeftCalibration(e, 0, true);
+      recog->updateRightCalibration(e, 0, true);
+    }
 		
 		cvResetImageROI(original_img);
 		capture->advance();
@@ -459,8 +475,8 @@ int main(int argc, char* argv[])
 			}
 			else if (calibration_timer >= 0)
 			{
-				recog->updateLeftCalibration(*eye_trackers[0], calibration_stage);
-				recog->updateRightCalibration(*eye_trackers[1], calibration_stage);
+				recog->updateLeftCalibration(*eye_trackers[0], calibration_stage, false);
+				recog->updateRightCalibration(*eye_trackers[1], calibration_stage, false);
 				calibration_timer++;
 			}
 			
@@ -518,7 +534,7 @@ int main(int argc, char* argv[])
 	delete recog;
 	delete capture;
 	cvDestroyWindow(config_name);
-
+  printf("Tracked for %d frames.\n", frameCount);
 	return 1;
 }
 

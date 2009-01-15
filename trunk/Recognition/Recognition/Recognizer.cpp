@@ -111,8 +111,6 @@ void Recognizer::updateCurrentLeftEyePosition(Eye leftEye)
 		currentEyeSizeLY[i] = currentEyeSizeLY[i-1];
 		currentPupilRadiusL[i] = currentPupilRadiusL[i-1];
 
-		browPositionL[i] = browPositionL[i-1]; 
-		
 		totalLX += currentGazePositionLX[i]*(MAF_LENGTH - i);
 		totalLY += currentGazePositionLY[i]*(MAF_LENGTH - i);
 		totalLEPX += currentEyePositionLX[i]*(MAF_LENGTH-i);
@@ -120,7 +118,6 @@ void Recognizer::updateCurrentLeftEyePosition(Eye leftEye)
 		totalLESX += currentEyeSizeLX[i]*(MAF_LENGTH-i);
 		totalLESY += currentEyeSizeLY[i]*(MAF_LENGTH-i);
 		totalLP += currentPupilRadiusL[i]*(MAF_LENGTH-i); 
-		totalBrow += browPositionL[i]*(MAF_LENGTH-i);
 	}
 	//handle edge cases
 	//first left
@@ -180,8 +177,6 @@ void Recognizer::updateCurrentRightEyePosition(Eye rightEye)
 		currentEyeSizeRY[i] = currentEyeSizeRY[i-1];
 		currentPupilRadiusR[i] = currentPupilRadiusR[i];
 
-		browPositionR[i] = browPositionR[i-1]; 
-		totalBrow += browPositionR[i]*(MAF_LENGTH-i);
 
 		totalRX += currentGazePositionRX[i]*(MAF_LENGTH - i);
 		totalRY += currentGazePositionRY[i]*(MAF_LENGTH - i);
@@ -499,12 +494,9 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		browCount=0;
 	}
 	
-	
-	
-	of_CalibrationL << newEyeLeft.pupilPositionX << "\t" << newEyeLeft.pupilPositionY << "\t" << newEyeLeft.pupilRadius << "\t" << newEyeLeft.browPositionY << "\t" << currentGazePositionLX[0] << "\t" << currentGazePositionLY[0] << "\t" << currentPupilRadiusL[0] << "\t" << calibrationPupilTopL << "\t" << calibrationPupilBottomL << "\t" << calibrationPupilLeftL << "\t" << calibrationPupilRightL << "\t" << calibrationBrowL << "\t" << currentLeftEyeAction;
-	of_CalibrationR << newEyeRight.pupilPositionX << "\t" << newEyeRight.pupilPositionY << "\t" << newEyeRight.pupilRadius << "\t" << newEyeRight.browPositionY << "\t" << currentGazePositionRX[0] << "\t" << currentGazePositionRY[0] << "\t" << currentPupilRadiusR[0] << "\t" << calibrationPupilTopR << "\t" << calibrationPupilBottomR << "\t" << calibrationPupilLeftR << "\t" << calibrationPupilRightR << "\t" << calibrationBrowR << "\t" << currentRightEyeAction;
-	return currentLeftEyeAction;
-
+	of_CalibrationL << newEyeLeft.pupilPositionX << "\t" << newEyeLeft.pupilPositionY << "\t" << newEyeLeft.pupilRadius << "\t" << newEyeLeft.browPositionY << "\t" << currentGazePositionLX[0] << "\t" << currentGazePositionLY[0] << "\t" << currentPupilRadiusL[0] << "\t" << calibrationPupilTopL << "\t" << calibrationPupilBottomL << "\t" << calibrationPupilLeftL << "\t" << calibrationPupilRightL << "\t" << calibrationBrowL << "\t" << currentLeftEyeAction << "\n";
+	of_CalibrationR << newEyeRight.pupilPositionX << "\t" << newEyeRight.pupilPositionY << "\t" << newEyeRight.pupilRadius << "\t" << newEyeRight.browPositionY << "\t" << currentGazePositionRX[0] << "\t" << currentGazePositionRY[0] << "\t" << currentPupilRadiusR[0] << "\t" << calibrationPupilTopR << "\t" << calibrationPupilBottomR << "\t" << calibrationPupilLeftR << "\t" << calibrationPupilRightR << "\t" << calibrationBrowR << "\t" << currentRightEyeAction << "\n";
+  return currentLeftEyeAction;
 }
 
 void Recognizer::printInfo()
@@ -552,7 +544,7 @@ int newAvg(int oldAvg, int oldCount, int newAdd)
 {
 	return (oldCount*oldAvg + newAdd ) / ( oldCount+1);
 }
-void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType, bool resetCalibration = false)
+void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType, bool resetCalibration)
 {
 	if(resetCalibration)
 	{
@@ -617,7 +609,7 @@ void Recognizer::updateLeftCalibration(Eye sourceEye, int calibrationType, bool 
 			break;
 	}
 }
-void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType, bool resetCalibration = false)
+void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType, bool resetCalibration)
 {
 		if(resetCalibration)
 	{

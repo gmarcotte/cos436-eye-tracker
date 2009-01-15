@@ -37,8 +37,6 @@ class Recognizer
 	ofstream of_CalibrationR;
 	//System::IO::StreamWriter s;
 
-
-
 	//CALIBRATION VARIABLES
 	int calibrationPupilTopL;
 	int calibrationPupilBottomL;
@@ -111,8 +109,8 @@ class Recognizer
 	void updateLeftCalibration(Eye sourceEye, int calibrationType);
 	void updateRightCalibration(Eye sourceEye, int calibrationType);
 	
-	void updateLeftCalibration(Eye sourceEye, int calibrationType, bool resetCalibration);
-	void updateRightCalibration(Eye sourceEye, int calibrationType, bool resetCalibration);
+	void updateLeftCalibration(Eye sourceEye, int calibrationType, bool resetCalibration = false);
+	void updateRightCalibration(Eye sourceEye, int calibrationType, bool resetCalibration = false);
 	
 	//the constructor
 	Recognizer();
