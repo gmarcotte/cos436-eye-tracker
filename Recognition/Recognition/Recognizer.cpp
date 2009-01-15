@@ -78,6 +78,8 @@ Recognizer::Recognizer()
 		browPositionL[i] = 0;
 		browPositionR[i] = 0;
 	}
+	of_CalibrationL.open("debugDataL.txt");
+	of_CalibrationR.open("debugDataR.txt");
 }
 
 //when a new eye is given, this updates the stored values in the MAF
@@ -279,6 +281,8 @@ int Recognizer::calculateCurrentRightEyePosition()
 
 int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 {
+	//System::IO::FileStream f("data.txt", System::IO::FileMode::Append);
+	
 	int newStateL;
 	int newStateR;
 	if(!newEyeLeft.noPupilDetected && !newEyeRight.noPupilDetected)
@@ -472,8 +476,10 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 		System::Windows::Forms::SendKeys::SendWait("f");
 	}
 	
-
+	
 	return currentLeftEyeAction;
+	of_CalibrationL << newEyeLeft.pupilPositionX << "\t" << newEyeLeft.pupilPositionY << "\t" << newEyeLeft.pupilRadius << "\t" << newEyeLeft.browPositionY << "\t" << currentGazePositionLX[0] << "\t" << currentGazePositionLY[0] << "\t" << currentPupilRadiusL[0] << "\t" << calibrationPupilTopL << "\t" << calibrationPupilBottomL << "\t" << calibrationPupilLeftL << "\t" << calibrationPupilRightL << "\t" << calibrationBrowL << "\t" << currentLeftEyeAction;
+	of_CalibrationR << newEyeRight.pupilPositionX << "\t" << newEyeRight.pupilPositionY << "\t" << newEyeRight.pupilRadius << "\t" << newEyeRight.browPositionY << "\t" << currentGazePositionRX[0] << "\t" << currentGazePositionRY[0] << "\t" << currentPupilRadiusR[0] << "\t" << calibrationPupilTopR << "\t" << calibrationPupilBottomR << "\t" << calibrationPupilLeftR << "\t" << calibrationPupilRightR << "\t" << calibrationBrowR << "\t" << currentRightEyeAction;
 }
 
 void Recognizer::printInfo()
@@ -514,6 +520,7 @@ void Recognizer::output(int currentEyeAction)
 		break;
 	}
 	}
+
 }
 
 int newAvg(int oldAvg, int oldCount, int newAdd)
@@ -615,6 +622,7 @@ void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType, bool
 
 	if(sourceEye.noPupilDetected)
 	{
+
 		printf("Garbage Calibration - no pupil detected\n");
 		return;
 	}
@@ -673,6 +681,9 @@ Recognizer::~Recognizer()
 	free(currentEyeSizeRX);
 	free(currentEyeSizeRY);
 	free(currentPupilRadiusR);
+
+	of_CalibrationL.close();
+	of_CalibrationR.close();
 }
 
 
