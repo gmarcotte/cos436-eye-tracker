@@ -6,6 +6,7 @@ Recognizer::Recognizer()
 {
 	blinkFrameCountLeft = 0;
 	blinkFrameCountRight = 0;
+	browCount=0;
 
 	currentLeftEyeAction = Recognizer::CENTER;
 	currentRightEyeAction = Recognizer::CENTER;
@@ -487,13 +488,23 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 	}
 	if(leftIsRaised && rightIsRaised)
 	{
-		System::Windows::Forms::SendKeys::SendWait("f");
+		browCount++;
+		if(browCount>=ACTION_LIMIT)
+		{
+			System::Windows::Forms::SendKeys::SendWait("f");
+		}
+	}
+	else
+	{
+		browCount=0;
 	}
 	
 	
-	return currentLeftEyeAction;
+	
 	of_CalibrationL << newEyeLeft.pupilPositionX << "\t" << newEyeLeft.pupilPositionY << "\t" << newEyeLeft.pupilRadius << "\t" << newEyeLeft.browPositionY << "\t" << currentGazePositionLX[0] << "\t" << currentGazePositionLY[0] << "\t" << currentPupilRadiusL[0] << "\t" << calibrationPupilTopL << "\t" << calibrationPupilBottomL << "\t" << calibrationPupilLeftL << "\t" << calibrationPupilRightL << "\t" << calibrationBrowL << "\t" << currentLeftEyeAction;
-		of_CalibrationR << newEyeRight.pupilPositionX << "\t" << newEyeRight.pupilPositionY << "\t" << newEyeRight.pupilRadius << "\t" << newEyeRight.browPositionY << "\t" << currentGazePositionRX[0] << "\t" << currentGazePositionRY[0] << "\t" << currentPupilRadiusR[0] << "\t" << calibrationPupilTopR << "\t" << calibrationPupilBottomR << "\t" << calibrationPupilLeftR << "\t" << calibrationPupilRightR << "\t" << calibrationBrowR << "\t" << currentRightEyeAction;
+	of_CalibrationR << newEyeRight.pupilPositionX << "\t" << newEyeRight.pupilPositionY << "\t" << newEyeRight.pupilRadius << "\t" << newEyeRight.browPositionY << "\t" << currentGazePositionRX[0] << "\t" << currentGazePositionRY[0] << "\t" << currentPupilRadiusR[0] << "\t" << calibrationPupilTopR << "\t" << calibrationPupilBottomR << "\t" << calibrationPupilLeftR << "\t" << calibrationPupilRightR << "\t" << calibrationBrowR << "\t" << currentRightEyeAction;
+	return currentLeftEyeAction;
+
 }
 
 void Recognizer::printInfo()

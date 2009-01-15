@@ -98,6 +98,7 @@ class Recognizer
 	int currentBrowAction;
 	int blinkFrameCountLeft;
 	int blinkFrameCountRight;
+	int browCount;
 	//when a new eye is given, this updates the stored values in the MAF
 	//and computes the new average position
 	void updateCurrentLeftEyePosition(Eye leftEye);
