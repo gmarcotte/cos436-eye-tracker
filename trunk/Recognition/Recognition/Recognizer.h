@@ -4,6 +4,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
+using namespace std;
 #using <System.Windows.Forms.dll>
 #using <System.dll>
 
@@ -28,6 +31,13 @@ class Recognizer
 					ACTION_LIMIT = 3,
 					BLINK_LIMIT = 12
 					};
+
+	//debugging text files
+	ofstream of_CalibrationL;
+	ofstream of_CalibrationR;
+	//System::IO::StreamWriter s;
+
+
 
 	//CALIBRATION VARIABLES
 	int calibrationPupilTopL;
