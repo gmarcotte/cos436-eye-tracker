@@ -28,8 +28,8 @@ class Recognizer
 
 	enum MAF_CONST {MAF_LENGTH = 4,//3 stored, 1 averaged
 				    MAF_DIVISOR = 6,//3+2+1
-					ACTION_LIMIT = 3,
-					BLINK_LIMIT = 12
+					ACTION_LIMIT = 1,
+					BLINK_LIMIT = 4
 					};
 
 	//debugging text files

@@ -97,6 +97,7 @@ void Recognizer::updateCurrentLeftEyePosition(Eye leftEye)
 	int totalLESX = 0;
 	int totalLESY = 0;
 	int totalLP = 0;
+	int totalBrow = 0;
 
 	for(int i = (MAF_LENGTH - 1); i > 1 ; i--)
 	{
@@ -109,13 +110,16 @@ void Recognizer::updateCurrentLeftEyePosition(Eye leftEye)
 		currentEyeSizeLY[i] = currentEyeSizeLY[i-1];
 		currentPupilRadiusL[i] = currentPupilRadiusL[i-1];
 
-		totalLX += currentGazePositionLX[i]*(MAF_LENGTH - i -1);
-		totalLY += currentGazePositionLY[i]*(MAF_LENGTH - i -1);
-		totalLEPX += currentEyePositionLX[i]*(MAF_LENGTH-i-1);
-		totalLEPY += currentEyePositionLY[i]*(MAF_LENGTH-i-1);
-		totalLESX += currentEyeSizeLX[i]*(MAF_LENGTH-i-1);
-		totalLESY += currentEyeSizeLY[i]*(MAF_LENGTH-i-1);
-		totalLP += currentPupilRadiusL[i]*(MAF_LENGTH-i-1); 
+		browPositionL[i] = browPositionL[i-1]; 
+		
+		totalLX += currentGazePositionLX[i]*(MAF_LENGTH - i);
+		totalLY += currentGazePositionLY[i]*(MAF_LENGTH - i);
+		totalLEPX += currentEyePositionLX[i]*(MAF_LENGTH-i);
+		totalLEPY += currentEyePositionLY[i]*(MAF_LENGTH-i);
+		totalLESX += currentEyeSizeLX[i]*(MAF_LENGTH-i);
+		totalLESY += currentEyeSizeLY[i]*(MAF_LENGTH-i);
+		totalLP += currentPupilRadiusL[i]*(MAF_LENGTH-i); 
+		totalBrow += browPositionL[i]*(MAF_LENGTH-i);
 	}
 	//handle edge cases
 	//first left
@@ -126,6 +130,7 @@ void Recognizer::updateCurrentLeftEyePosition(Eye leftEye)
 	currentEyeSizeLX[1] = leftEye.eyeSizeX;
 	currentEyeSizeLY[1] = leftEye.eyeSizeY;
 	currentPupilRadiusL[1] = leftEye.pupilRadius;
+	browPositionL[1] = leftEye.browPositionY; 
 
 	totalLX += currentGazePositionLX[1]*(MAF_LENGTH-1);
 	totalLY += currentGazePositionLY[1]*(MAF_LENGTH-1);
@@ -134,7 +139,9 @@ void Recognizer::updateCurrentLeftEyePosition(Eye leftEye)
 	totalLESX += currentEyeSizeLX[1]*(MAF_LENGTH-1);
 	totalLESY += currentEyeSizeLY[1]*(MAF_LENGTH-1);
 	totalLP += currentPupilRadiusL[1]*(MAF_LENGTH-1);
-	
+	totalBrow += browPositionL[1]*(MAF_LENGTH-1);
+
+
 	currentGazePositionLX[0] = (int) totalLX/(MAF_DIVISOR);
 	currentGazePositionLY[0] = (int) totalLY/(MAF_DIVISOR);
 	currentEyePositionLX[0] = (int) totalLEPX/(MAF_DIVISOR);
@@ -142,6 +149,7 @@ void Recognizer::updateCurrentLeftEyePosition(Eye leftEye)
 	currentEyeSizeLX[0] = (int) totalLESX/(MAF_DIVISOR);
 	currentEyeSizeLY[0] = (int) totalLESY/(MAF_DIVISOR);
 	currentPupilRadiusL[0] = (int) totalLP/(MAF_DIVISOR);
+	browPositionL[0] = (int) totalBrow/(MAF_DIVISOR);
 	
 	
 }
@@ -169,15 +177,18 @@ void Recognizer::updateCurrentRightEyePosition(Eye rightEye)
 		currentEyePositionRY[i] = currentEyePositionRY[i-1];
 		currentEyeSizeRX[i] = currentEyeSizeRX[i-1];
 		currentEyeSizeRY[i] = currentEyeSizeRY[i-1];
-		currentPupilRadiusR[i] = currentPupilRadiusR[i-1];
+		currentPupilRadiusR[i] = currentPupilRadiusR[i];
 
-		totalRX += currentGazePositionRX[i]*(MAF_LENGTH - i -1);
-		totalRY += currentGazePositionRY[i]*(MAF_LENGTH - i -1);
-		totalREPX += currentEyePositionRX[i]*(MAF_LENGTH-i-1);
-		totalREPY += currentEyePositionRY[i]*(MAF_LENGTH-i-1);
-		totalRESX += currentEyeSizeRX[i]*(MAF_LENGTH-i-1);
-		totalRESY += currentEyeSizeRY[i]*(MAF_LENGTH-i-1);
-		totalRP += currentPupilRadiusR[i]*(MAF_LENGTH-i-1); 
+		browPositionR[i] = browPositionR[i-1]; 
+		totalBrow += browPositionR[i]*(MAF_LENGTH-i);
+
+		totalRX += currentGazePositionRX[i]*(MAF_LENGTH - i);
+		totalRY += currentGazePositionRY[i]*(MAF_LENGTH - i);
+		totalREPX += currentEyePositionRX[i]*(MAF_LENGTH-i);
+		totalREPY += currentEyePositionRY[i]*(MAF_LENGTH-i);
+		totalRESX += currentEyeSizeRX[i]*(MAF_LENGTH-i);
+		totalRESY += currentEyeSizeRY[i]*(MAF_LENGTH-i);
+		totalRP += currentPupilRadiusR[i]*(MAF_LENGTH-i); 
 
 	}
 	//handle edge cases
@@ -190,6 +201,7 @@ void Recognizer::updateCurrentRightEyePosition(Eye rightEye)
 	currentEyeSizeRX[1] = rightEye.eyeSizeX;
 	currentEyeSizeRY[1] = rightEye.eyeSizeY;
 	currentPupilRadiusR[1] = rightEye.pupilRadius;
+	browPositionL[1] = rightEye.browPositionY; 
 
 	totalRX += currentGazePositionRX[1]*(MAF_LENGTH-1);
 	totalRY += currentGazePositionRY[1]*(MAF_LENGTH-1);
@@ -198,6 +210,7 @@ void Recognizer::updateCurrentRightEyePosition(Eye rightEye)
 	totalRESX += currentEyeSizeRX[1]*(MAF_LENGTH-1);
 	totalRESY += currentEyeSizeRY[1]*(MAF_LENGTH-1);
 	totalRP += currentPupilRadiusR[1]*(MAF_LENGTH-1);
+	totalBrow += browPositionR[1]*(MAF_LENGTH-1);
 	
 	currentGazePositionRX[0] = (int) totalRX/(MAF_DIVISOR);
 	currentGazePositionRY[0] = (int) totalRY/(MAF_DIVISOR);
@@ -206,6 +219,7 @@ void Recognizer::updateCurrentRightEyePosition(Eye rightEye)
 	currentEyeSizeRX[0] = (int) totalRESX/(MAF_DIVISOR);
 	currentEyeSizeRY[0] = (int) totalRESY/(MAF_DIVISOR);
 	currentPupilRadiusR[0] = (int) totalRP/(MAF_DIVISOR);
+	browPositionR[0] = (int) totalBrow/(MAF_DIVISOR);
 }
 
 int Recognizer::calculateCurrentLeftEyePosition()
@@ -463,11 +477,11 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 	}
 	browPositionL[0] = newEyeLeft.browPositionY;
 	browPositionR[0] = newEyeRight.browPositionY;
-	if( (browPositionL[0] + (int) .5*newEyeLeft.browHeight) < calibrationBrowL)
+	if( (browPositionL[0] - (int) .5*newEyeLeft.browHeight) < calibrationBrowL)
 	{
 		leftIsRaised = true;
 	}
-	if( (browPositionR[0] + (int) .5*newEyeRight.browHeight) < calibrationBrowL)
+	if( (browPositionR[0] - (int) .5*newEyeRight.browHeight) < calibrationBrowL)
 	{
 		rightIsRaised = true;
 	}
@@ -479,7 +493,7 @@ int Recognizer::updateState(Eye newEyeLeft, Eye newEyeRight)
 	
 	return currentLeftEyeAction;
 	of_CalibrationL << newEyeLeft.pupilPositionX << "\t" << newEyeLeft.pupilPositionY << "\t" << newEyeLeft.pupilRadius << "\t" << newEyeLeft.browPositionY << "\t" << currentGazePositionLX[0] << "\t" << currentGazePositionLY[0] << "\t" << currentPupilRadiusL[0] << "\t" << calibrationPupilTopL << "\t" << calibrationPupilBottomL << "\t" << calibrationPupilLeftL << "\t" << calibrationPupilRightL << "\t" << calibrationBrowL << "\t" << currentLeftEyeAction;
-	of_CalibrationR << newEyeRight.pupilPositionX << "\t" << newEyeRight.pupilPositionY << "\t" << newEyeRight.pupilRadius << "\t" << newEyeRight.browPositionY << "\t" << currentGazePositionRX[0] << "\t" << currentGazePositionRY[0] << "\t" << currentPupilRadiusR[0] << "\t" << calibrationPupilTopR << "\t" << calibrationPupilBottomR << "\t" << calibrationPupilLeftR << "\t" << calibrationPupilRightR << "\t" << calibrationBrowR << "\t" << currentRightEyeAction;
+		of_CalibrationR << newEyeRight.pupilPositionX << "\t" << newEyeRight.pupilPositionY << "\t" << newEyeRight.pupilRadius << "\t" << newEyeRight.browPositionY << "\t" << currentGazePositionRX[0] << "\t" << currentGazePositionRY[0] << "\t" << currentPupilRadiusR[0] << "\t" << calibrationPupilTopR << "\t" << calibrationPupilBottomR << "\t" << calibrationPupilLeftR << "\t" << calibrationPupilRightR << "\t" << calibrationBrowR << "\t" << currentRightEyeAction;
 }
 
 void Recognizer::printInfo()
@@ -622,7 +636,6 @@ void Recognizer::updateRightCalibration(Eye sourceEye, int calibrationType, bool
 
 	if(sourceEye.noPupilDetected)
 	{
-
 		printf("Garbage Calibration - no pupil detected\n");
 		return;
 	}
